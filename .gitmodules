@@ -1,0 +1,9 @@
+[submodule "Utilities/Third_Party/Fatfs/Fatfs_src"]
+	path = Utilities/Third_Party/Fatfs/Fatfs_src
+	url = git@172.21.15.151:gui/common/fatfs/fatfs.git
+[submodule "Utilities/Third_Party/FreeRTOS/freertos_src"]
+	path = Utilities/Third_Party/FreeRTOS/freertos_src
+	url = git@172.21.15.151:gui/common/freertos/freertos.git
+[submodule "Utilities/Third_Party/lvgl/lvgl_src"]
+	path = Utilities/Third_Party/lvgl/lvgl_src
+	url = https://github.com/lvgl/lvgl.git
