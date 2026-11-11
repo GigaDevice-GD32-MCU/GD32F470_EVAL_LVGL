@@ -2,11 +2,11 @@
     \file    gd32f4xx_ctc.c
     \brief   CTC driver
 
-    \version 2024-01-15, V3.2.0, firmware for GD32F4xx
+    \version 2026-08-14, V3.4.0, firmware for GD32F4xx
 */
 
 /*
-    Copyright (c) 2024, GigaDevice Semiconductor Inc.
+    Copyright (c) 2026, GigaDevice Semiconductor Inc.
 
     Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
@@ -218,11 +218,13 @@ uint16_t ctc_counter_capture_value_read(void)
 */
 FlagStatus ctc_counter_direction_read(void)
 {
+    FlagStatus status;
     if(RESET != (CTC_STAT & CTC_STAT_REFDIR)) {
-        return SET;
+        status = SET;
     } else {
-        return RESET;
+        status = RESET;
     }
+    return status;
 }
 
 /*!
@@ -296,11 +298,15 @@ void ctc_interrupt_disable(uint32_t interrupt)
       \arg        CTC_INT_FLAG_TRIMERR: trim value error interrupt
     \param[out] none
     \retval     FlagStatus: SET or RESET
+    \note       After the interrupt enable bit is cleared, if the hardware flag remains set, this API will still return RESET.
+                Therefore, in an ISR or during the interrupt-disable flow, this API alone must not be relied upon to determine whether the flag should be cleared.
+                The corresponding flag must be cleared according to the module-specific rules, and the NVIC-pending bit should also be cleared when necessary.
 */
 FlagStatus ctc_interrupt_flag_get(uint32_t int_flag)
 {
-    uint32_t interrupt_flag = 0U, intenable = 0U;
-
+    FlagStatus status;
+    uint32_t interrupt_flag = 0U;
+    uint32_t intenable = 0U;
     /* check whether the interrupt is enabled */
     if(RESET != (int_flag & CTC_FLAG_MASK)) {
         intenable = CTC_CTL0 & CTC_CTL0_ERRIE;
@@ -312,10 +318,11 @@ FlagStatus ctc_interrupt_flag_get(uint32_t int_flag)
     interrupt_flag = CTC_STAT & int_flag;
 
     if(interrupt_flag && intenable) {
-        return SET;
+        status = SET;
     } else {
-        return RESET;
+        status = RESET;
     }
+    return status;
 }
 
 /*!
@@ -357,11 +364,13 @@ void ctc_interrupt_flag_clear(uint32_t int_flag)
 */
 FlagStatus ctc_flag_get(uint32_t flag)
 {
+    FlagStatus status;
     if(RESET != (CTC_STAT & flag)) {
-        return SET;
+        status = SET;
     } else {
-        return RESET;
+        status = RESET;
     }
+    return status;
 }
 
 /*!

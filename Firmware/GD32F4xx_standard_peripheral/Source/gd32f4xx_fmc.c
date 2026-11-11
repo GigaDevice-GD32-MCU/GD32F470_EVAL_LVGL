@@ -2,11 +2,11 @@
     \file    gd32f4xx_fmc.c
     \brief   FMC driver
 
-    \version 2024-01-15, V3.2.0, firmware for GD32F4xx
+    \version 2026-08-14, V3.4.0, firmware for GD32F4xx
 */
 
 /*
-    Copyright (c) 2024, GigaDevice Semiconductor Inc.
+    Copyright (c) 2026, GigaDevice Semiconductor Inc.
 
     Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
@@ -525,25 +525,28 @@ void ob_erase(void)
 */
 ErrStatus ob_write_protection_enable(uint32_t ob_wp)
 {
+    ErrStatus retval = SUCCESS;
     uint32_t reg0 = FMC_OBCTL0;
     uint32_t reg1 = FMC_OBCTL1;
     fmc_state_enum fmc_state = FMC_READY;
     if(RESET != (FMC_OBCTL0 & FMC_OBCTL0_DRP)) {
-        return ERROR;
-    }
-    /* wait for the FMC ready */
-    fmc_state = fmc_ready_wait(FMC_TIMEOUT_COUNT);
-
-    if(FMC_READY == fmc_state) {
-        reg0 &= (~((uint32_t)ob_wp << 16U));
-        reg1 &= (~(ob_wp & 0xFFFF0000U));
-        FMC_OBCTL0 = reg0;
-        FMC_OBCTL1 = reg1;
-
-        return SUCCESS;
+        retval = ERROR;
     } else {
-        return ERROR;
+        /* wait for the FMC ready */
+        fmc_state = fmc_ready_wait(FMC_TIMEOUT_COUNT);
+        
+        if(FMC_READY == fmc_state) {
+            reg0 &= (~((uint32_t)ob_wp << 16U));
+            reg1 &= (~(ob_wp & 0xFFFF0000U));
+            FMC_OBCTL0 = reg0;
+            FMC_OBCTL1 = reg1;
+        
+            retval = SUCCESS;
+        } else {
+            retval = ERROR;
+        }
     }
+    return retval;
 }
 
 /*!
@@ -558,25 +561,28 @@ ErrStatus ob_write_protection_enable(uint32_t ob_wp)
 */
 ErrStatus ob_write_protection_disable(uint32_t ob_wp)
 {
+    ErrStatus retval = SUCCESS;
     uint32_t reg0 = FMC_OBCTL0;
     uint32_t reg1 = FMC_OBCTL1;
     fmc_state_enum fmc_state = FMC_READY;
     if(RESET != (FMC_OBCTL0 & FMC_OBCTL0_DRP)) {
-        return ERROR;
-    }
-    /* wait for the FMC ready */
-    fmc_state = fmc_ready_wait(FMC_TIMEOUT_COUNT);
-
-    if(FMC_READY == fmc_state) {
-        reg0 |= ((uint32_t)ob_wp << 16U);
-        reg1 |= (ob_wp & 0xFFFF0000U);
-        FMC_OBCTL0 = reg0;
-        FMC_OBCTL1 = reg1;
-
-        return SUCCESS;
+        retval = ERROR;
     } else {
-        return ERROR;
+        /* wait for the FMC ready */
+        fmc_state = fmc_ready_wait(FMC_TIMEOUT_COUNT);
+        
+        if(FMC_READY == fmc_state) {
+            reg0 |= ((uint32_t)ob_wp << 16U);
+            reg1 |= (ob_wp & 0xFFFF0000U);
+            FMC_OBCTL0 = reg0;
+            FMC_OBCTL1 = reg1;
+        
+            retval = SUCCESS;
+        } else {
+            retval = ERROR;
+        }
     }
+    return retval;
 }
 
 /*!
@@ -815,12 +821,14 @@ uint16_t ob_write_protection1_get(void)
 */
 uint16_t ob_drp0_get(void)
 {
+    uint16_t retval;
     /* return the FMC erase/program protection and D-bus read protection option bytes value */
     if(FMC_OBCTL0 & FMC_OBCTL0_DRP) {
-        return (uint16_t)(((uint16_t)(FMC_OBCTL0 >> 16U)) & 0x0FFFU);
+        retval = (uint16_t)(((uint16_t)(FMC_OBCTL0 >> 16U)) & 0x0FFFU);
     } else {
-        return 0xF000U;
+        retval = 0xF000U;
     }
+    return retval;
 }
 
 /*!
@@ -831,12 +839,14 @@ uint16_t ob_drp0_get(void)
 */
 uint16_t ob_drp1_get(void)
 {
+    uint16_t retval;
     /* return the FMC erase/program protection and D-bus read protection option bytes value */
     if(FMC_OBCTL0 & FMC_OBCTL0_DRP) {
-        return (uint16_t)(((uint16_t)(FMC_OBCTL1 >> 16U)) & 0x0FFFU);
+        retval = (uint16_t)(((uint16_t)(FMC_OBCTL1 >> 16U)) & 0x0FFFU);
     } else {
-        return 0xF000U;
+        retval = 0xF000U;
     }
+    return retval;
 }
 
 /*!
@@ -885,17 +895,17 @@ uint8_t ob_user_bor_threshold_get(void)
 */
 FlagStatus fmc_flag_get(uint32_t fmc_flag)
 {
+    FlagStatus retval = RESET;
     if(FMC_STAT & fmc_flag) {
-        return SET;
+        retval = SET;
     }
     /* return the state of corresponding FMC flag */
-    return RESET;
+    return retval;
 }
 
 /*!
     \brief    clear the FMC pending flag
     \param[in]  FMC_flag: clear FMC flag
-                only one parameter can be selected which is shown as below:
       \arg        FMC_FLAG_RDDERR: FMC read D-bus protection error flag bit
       \arg        FMC_FLAG_PGSERR: FMC program sequence error flag bit
       \arg        FMC_FLAG_PGMERR: FMC program size not match error flag bit
@@ -914,7 +924,6 @@ void fmc_flag_clear(uint32_t fmc_flag)
 /*!
     \brief    enable FMC interrupt
     \param[in]  fmc_int: the FMC interrupt source
-                only one parameter can be selected which is shown as below:
       \arg        FMC_INT_END: enable FMC end of program interrupt
       \arg        FMC_INT_ERR: enable FMC error interrupt
     \param[out] none
@@ -928,7 +937,6 @@ void fmc_interrupt_enable(uint32_t fmc_int)
 /*!
     \brief    disable FMC interrupt
     \param[in]  fmc_int: the FMC interrupt source
-                only one parameter can be selected which is shown as below:
       \arg        FMC_INT_END: disable FMC end of program interrupt
       \arg        FMC_INT_ERR: disable FMC error interrupt
     \param[out] none
@@ -951,32 +959,35 @@ void fmc_interrupt_disable(uint32_t fmc_int)
       \arg        FMC_INT_FLAG_END: FMC end of operation interrupt flag
     \param[out] none
     \retval     FlagStatus: SET or RESET
+    \note       After the interrupt enable bit is cleared, if the hardware flag remains set, this API will still return RESET.
+                Therefore, in an ISR or during the interrupt-disable flow, this API alone must not be relied upon to determine whether the flag should be cleared.
+                The corresponding flag must be cleared according to the module-specific rules, and the NVIC-pending bit should also be cleared when necessary.
 */
 FlagStatus fmc_interrupt_flag_get(uint32_t fmc_int_flag)
 {
+    FlagStatus retval = RESET;
     if(FMC_FLAG_END == fmc_int_flag) {
         /* end of operation interrupt flag */
         if(FMC_CTL & FMC_CTL_ENDIE) {
             if(FMC_STAT & fmc_int_flag) {
-                return SET;
+                retval = SET;
             }
         }
     } else {
         /* error interrupt flags */
         if(FMC_CTL & FMC_CTL_ERRIE) {
             if(FMC_STAT & fmc_int_flag) {
-                return SET;
+                retval = SET;
             }
         }
     }
 
-    return RESET;
+    return retval;
 }
 
 /*!
     \brief    clear the FMC interrupt flag
     \param[in]  fmc_int_flag: FMC interrupt flag
-                only one parameter can be selected which is shown as below:
       \arg        FMC_INT_FLAG_RDDERR: FMC read D-bus protection error interrupt flag
       \arg        FMC_INT_FLAG_PGSERR: FMC program sequence error interrupt flag
       \arg        FMC_INT_FLAG_PGMERR: FMC program size not match error interrupt flag

@@ -2,11 +2,11 @@
     \file    gd32f4xx_exmc.c
     \brief   EXMC driver
 
-    \version 2024-01-15, V3.2.0, firmware for GD32F4xx
+    \version 2026-08-14, V3.4.0, firmware for GD32F4xx
 */
 
 /*
-    Copyright (c) 2024, GigaDevice Semiconductor Inc.
+    Copyright (c) 2026, GigaDevice Semiconductor Inc.
 
     Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
@@ -158,20 +158,10 @@ void exmc_norsram_struct_para_init(exmc_norsram_parameter_struct *exmc_norsram_i
     exmc_norsram_init_struct->write_mode = EXMC_ASYN_WRITE;
 
     /* configure read/write timing */
-    exmc_norsram_init_struct->read_write_timing->asyn_address_setuptime = 0xFU;
-    exmc_norsram_init_struct->read_write_timing->asyn_address_holdtime = 0xFU;
-    exmc_norsram_init_struct->read_write_timing->asyn_data_setuptime = 0xFFU;
-    exmc_norsram_init_struct->read_write_timing->bus_latency = 0xFU;
-    exmc_norsram_init_struct->read_write_timing->syn_clk_division = EXMC_SYN_CLOCK_RATIO_16_CLK;
-    exmc_norsram_init_struct->read_write_timing->syn_data_latency = EXMC_DATALAT_17_CLK;
-    exmc_norsram_init_struct->read_write_timing->asyn_access_mode = EXMC_ACCESS_MODE_A;
+    exmc_norsram_init_struct->read_write_timing = (void *)0U;
 
     /* configure write timing, when extended mode is used */
-    exmc_norsram_init_struct->write_timing->asyn_address_setuptime = 0xFU;
-    exmc_norsram_init_struct->write_timing->asyn_address_holdtime = 0xFU;
-    exmc_norsram_init_struct->write_timing->asyn_data_setuptime = 0xFFU;
-    exmc_norsram_init_struct->write_timing->bus_latency = 0xFU;
-    exmc_norsram_init_struct->write_timing->asyn_access_mode = EXMC_ACCESS_MODE_A;
+    exmc_norsram_init_struct->write_timing = (void *)0U;
 }
 
 /*!
@@ -326,14 +316,8 @@ void exmc_nand_struct_para_init(exmc_nand_parameter_struct *exmc_nand_init_struc
     exmc_nand_init_struct->ecc_size = EXMC_ECC_SIZE_256BYTES;
     exmc_nand_init_struct->ctr_latency = 0x0U;
     exmc_nand_init_struct->atr_latency = 0x0U;
-    exmc_nand_init_struct->common_space_timing->setuptime = 0xFCU;
-    exmc_nand_init_struct->common_space_timing->waittime = 0xFCU;
-    exmc_nand_init_struct->common_space_timing->holdtime = 0xFCU;
-    exmc_nand_init_struct->common_space_timing->databus_hiztime = 0xFCU;
-    exmc_nand_init_struct->attribute_space_timing->setuptime = 0xFCU;
-    exmc_nand_init_struct->attribute_space_timing->waittime = 0xFCU;
-    exmc_nand_init_struct->attribute_space_timing->holdtime = 0xFCU;
-    exmc_nand_init_struct->attribute_space_timing->databus_hiztime = 0xFCU;
+    exmc_nand_init_struct->common_space_timing = (void *)0U;
+    exmc_nand_init_struct->attribute_space_timing = (void *)0U;
 }
 
 /*!
@@ -441,18 +425,9 @@ void exmc_pccard_struct_para_init(exmc_pccard_parameter_struct *exmc_pccard_init
     exmc_pccard_init_struct->wait_feature = DISABLE;
     exmc_pccard_init_struct->ctr_latency = 0x0U;
     exmc_pccard_init_struct->atr_latency = 0x0U;
-    exmc_pccard_init_struct->common_space_timing->setuptime = 0xFCU;
-    exmc_pccard_init_struct->common_space_timing->waittime = 0xFCU;
-    exmc_pccard_init_struct->common_space_timing->holdtime = 0xFCU;
-    exmc_pccard_init_struct->common_space_timing->databus_hiztime = 0xFCU;
-    exmc_pccard_init_struct->attribute_space_timing->setuptime = 0xFCU;
-    exmc_pccard_init_struct->attribute_space_timing->waittime = 0xFCU;
-    exmc_pccard_init_struct->attribute_space_timing->holdtime = 0xFCU;
-    exmc_pccard_init_struct->attribute_space_timing->databus_hiztime = 0xFCU;
-    exmc_pccard_init_struct->io_space_timing->setuptime = 0xFCU;
-    exmc_pccard_init_struct->io_space_timing->waittime = 0xFCU;
-    exmc_pccard_init_struct->io_space_timing->holdtime = 0xFCU;
-    exmc_pccard_init_struct->io_space_timing->databus_hiztime = 0xFCU;
+    exmc_pccard_init_struct->common_space_timing = (void *)0U;
+    exmc_pccard_init_struct->attribute_space_timing = (void *)0U;
+    exmc_pccard_init_struct->io_space_timing = (void *)0U;
 }
 
 /*!
@@ -567,13 +542,7 @@ void exmc_sdram_struct_para_init(exmc_sdram_parameter_struct *exmc_sdram_init_st
     exmc_sdram_init_struct->burst_read_switch = DISABLE;
     exmc_sdram_init_struct->pipeline_read_delay = EXMC_PIPELINE_DELAY_0_HCLK;
 
-    exmc_sdram_init_struct->timing->load_mode_register_delay = 16U;
-    exmc_sdram_init_struct->timing->exit_selfrefresh_delay = 16U;
-    exmc_sdram_init_struct->timing->row_address_select_delay = 16U;
-    exmc_sdram_init_struct->timing->auto_refresh_delay = 16U;
-    exmc_sdram_init_struct->timing->write_recovery_delay = 16U;
-    exmc_sdram_init_struct->timing->row_precharge_delay = 16U;
-    exmc_sdram_init_struct->timing->row_to_column_delay = 16U;
+    exmc_sdram_init_struct->timing = (void *)0U;
 }
 
 /*!
@@ -1027,6 +996,7 @@ uint32_t exmc_sqpipsram_high_id_get(void)
 */
 FlagStatus exmc_sqpipsram_send_command_state_get(uint32_t send_command_flag)
 {
+    FlagStatus status;
     uint32_t flag = 0x00000000U;
 
     if(EXMC_SEND_COMMAND_FLAG_RDID == send_command_flag) {
@@ -1037,12 +1007,11 @@ FlagStatus exmc_sqpipsram_send_command_state_get(uint32_t send_command_flag)
     }
 
     if(flag & send_command_flag) {
-        /* flag is set */
-        return SET;
+        status = SET;
     } else {
-        /* flag is reset */
-        return RESET;
+        status = RESET;
     }
+    return status;
 }
 
 /*!
@@ -1125,6 +1094,7 @@ void exmc_interrupt_disable(uint32_t exmc_bank, uint32_t interrupt)
 */
 FlagStatus exmc_flag_get(uint32_t exmc_bank, uint32_t flag)
 {
+    FlagStatus reval;
     uint32_t status = 0x00000000U;
 
     if((EXMC_BANK1_NAND == exmc_bank) || (EXMC_BANK2_NAND == exmc_bank) || (EXMC_BANK3_PCCARD == exmc_bank)) {
@@ -1136,12 +1106,11 @@ FlagStatus exmc_flag_get(uint32_t exmc_bank, uint32_t flag)
     }
 
     if((status & flag) != (uint32_t)flag) {
-        /* flag is reset */
-        return RESET;
+        reval = RESET;
     } else {
-        /* flag is set */
-        return SET;
+        reval = SET;
     }
+    return reval;
 }
 
 /*!
@@ -1192,9 +1161,13 @@ void exmc_flag_clear(uint32_t exmc_bank, uint32_t flag)
       \arg        EXMC_SDRAM_INT_FLAG_REFRESH: refresh error interrupt and flag
     \param[out] none
     \retval     FlagStatus: SET or RESET
+    \note       After the interrupt enable bit is cleared, if the hardware flag remains set, this API will still return RESET.
+                Therefore, in an ISR or during the interrupt-disable flow, this API alone must not be relied upon to determine whether the flag should be cleared.
+                The corresponding flag must be cleared according to the module-specific rules, and the NVIC-pending bit should also be cleared when necessary.
 */
 FlagStatus exmc_interrupt_flag_get(uint32_t exmc_bank, uint32_t interrupt)
 {
+    FlagStatus reval;
     uint32_t status = 0x00000000U, interrupt_enable = 0x00000000U, interrupt_state = 0x00000000U;
 
     if((EXMC_BANK1_NAND == exmc_bank) || (EXMC_BANK2_NAND == exmc_bank) || (EXMC_BANK3_PCCARD == exmc_bank)) {
@@ -1211,11 +1184,12 @@ FlagStatus exmc_interrupt_flag_get(uint32_t exmc_bank, uint32_t interrupt)
 
     if((interrupt_enable) && (interrupt_state)) {
         /* interrupt flag is set */
-        return SET;
+        reval = SET;
     } else {
         /* interrupt flag is reset */
-        return RESET;
+        reval = RESET;
     }
+    return reval;
 }
 
 /*!

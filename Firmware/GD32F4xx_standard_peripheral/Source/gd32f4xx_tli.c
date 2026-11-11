@@ -2,11 +2,11 @@
     \file    gd32f4xx_tli.c
     \brief   TLI driver
 
-    \version 2024-01-15, V3.2.0, firmware for GD32F4xx
+    \version 2026-08-14, V3.4.0, firmware for GD32F4xx
 */
 
 /*
-    Copyright (c) 2024, GigaDevice Semiconductor Inc.
+    Copyright (c) 2026, GigaDevice Semiconductor Inc.
 
     Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
@@ -533,19 +533,23 @@ void tli_interrupt_disable(uint32_t int_flag)
       \arg        TLI_INT_FLAG_LCR: layer configuration reloaded interrupt flag
     \param[out] none
     \retval     FlagStatus: SET or RESET
+    \note       After the interrupt enable bit is cleared, if the hardware flag remains set, this API will still return RESET.
+                Therefore, in an ISR or during the interrupt-disable flow, this API alone must not be relied upon to determine whether the flag should be cleared.
+                The corresponding flag must be cleared according to the module-specific rules, and the NVIC-pending bit should also be cleared when necessary.
 */
 FlagStatus tli_interrupt_flag_get(uint32_t int_flag)
 {
+    FlagStatus status = RESET;
     uint32_t state;
     state = TLI_INTF;
     if(state & int_flag) {
         state = TLI_INTEN;
         /* check whether the corresponding bit in TLI_INTEN is set or not */
         if(state & int_flag) {
-            return SET;
+            status = SET;
         }
     }
-    return RESET;
+    return status;
 }
 
 /*!
@@ -581,6 +585,7 @@ void tli_interrupt_flag_clear(uint32_t int_flag)
 */
 FlagStatus tli_flag_get(uint32_t flag)
 {
+    FlagStatus status;
     uint32_t stat;
     /* choose which register to get flag or state */
     if(flag >> 31U) {
@@ -589,8 +594,9 @@ FlagStatus tli_flag_get(uint32_t flag)
         stat = TLI_STAT;
     }
     if(flag & stat) {
-        return SET;
+        status = SET;
     } else {
-        return RESET;
+        status = RESET;
     }
+    return status;
 }

@@ -1,11 +1,11 @@
 /*!
     \file    gd32f4xx_misc.c
     \brief   MISC driver
-    \version 2024-01-15, V3.2.0, firmware for GD32F4xx
+    \version 2026-08-14, V3.4.0, firmware for GD32F4xx
 */
 
 /*
-    Copyright (c) 2024, GigaDevice Semiconductor Inc.
+    Copyright (c) 2026, GigaDevice Semiconductor Inc.
 
     Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
@@ -58,38 +58,34 @@ void nvic_priority_group_set(uint32_t nvic_prigroup)
     \param[out] none
     \retval     none
 */
-void nvic_irq_enable(uint8_t nvic_irq, uint8_t nvic_irq_pre_priority,
+void nvic_irq_enable(IRQn_Type nvic_irq, uint8_t nvic_irq_pre_priority,
                      uint8_t nvic_irq_sub_priority)
 {
-    uint32_t temp_priority = 0x00U, temp_pre = 0x00U, temp_sub = 0x00U;
-    /* use the priority group value to get the temp_pre and the temp_sub */
-    if(((SCB->AIRCR) & (uint32_t)0x700U) == NVIC_PRIGROUP_PRE0_SUB4) {
-        temp_pre = 0U;
-        temp_sub = 0x4U;
-    } else if(((SCB->AIRCR) & (uint32_t)0x700U) == NVIC_PRIGROUP_PRE1_SUB3) {
-        temp_pre = 1U;
-        temp_sub = 0x3U;
-    } else if(((SCB->AIRCR) & (uint32_t)0x700U) == NVIC_PRIGROUP_PRE2_SUB2) {
-        temp_pre = 2U;
-        temp_sub = 0x2U;
-    } else if(((SCB->AIRCR) & (uint32_t)0x700U) == NVIC_PRIGROUP_PRE3_SUB1) {
-        temp_pre = 3U;
-        temp_sub = 0x1U;
-    } else if(((SCB->AIRCR) & (uint32_t)0x700U) == NVIC_PRIGROUP_PRE4_SUB0) {
-        temp_pre = 4U;
-        temp_sub = 0x0U;
-    } else {
+    uint32_t nvic_prigroup, nvic_priority;
+
+    /* check current priority group */
+    switch(SCB->AIRCR & SCB_AIRCR_PRIGROUP_Msk) {
+    case NVIC_PRIGROUP_PRE0_SUB4:
+    case NVIC_PRIGROUP_PRE1_SUB3:
+    case NVIC_PRIGROUP_PRE2_SUB2:
+    case NVIC_PRIGROUP_PRE3_SUB1:
+    case NVIC_PRIGROUP_PRE4_SUB0:
+        break;
+    default:
         nvic_priority_group_set(NVIC_PRIGROUP_PRE2_SUB2);
-        temp_pre = 2U;
-        temp_sub = 0x2U;
+        break;
     }
-    /* get the temp_priority to fill the NVIC->IP register */
-    temp_priority = (uint32_t)nvic_irq_pre_priority << (0x4U - temp_pre);
-    temp_priority |= nvic_irq_sub_priority & (0x0FU >> (0x4U - temp_sub));
-    temp_priority = temp_priority << 0x04U;
-    NVIC->IP[nvic_irq] = (uint8_t)temp_priority;
+
+    /* get the priority group value */
+    nvic_prigroup = NVIC_GetPriorityGrouping();
+
+    /* encoding the pre-emption, subpriority priority */
+    nvic_priority = NVIC_EncodePriority(nvic_prigroup, (uint32_t)nvic_irq_pre_priority, (uint32_t)nvic_irq_sub_priority);
+    /* set priority */
+    NVIC_SetPriority(nvic_irq, nvic_priority);
+
     /* enable the selected IRQ */
-    NVIC->ISER[nvic_irq >> 0x05U] = (uint32_t)0x01U << (nvic_irq & (uint8_t)0x1FU);
+    NVIC_EnableIRQ(nvic_irq);
 }
 
 /*!
@@ -98,10 +94,10 @@ void nvic_irq_enable(uint8_t nvic_irq, uint8_t nvic_irq_pre_priority,
     \param[out] none
     \retval     none
 */
-void nvic_irq_disable(uint8_t nvic_irq)
+void nvic_irq_disable(IRQn_Type nvic_irq)
 {
     /* disable the selected IRQ.*/
-    NVIC->ICER[nvic_irq >> 0x05] = (uint32_t)0x01 << (nvic_irq & (uint8_t)0x1F);
+    NVIC_DisableIRQ(nvic_irq);
 }
 
 /*!
@@ -170,3 +166,126 @@ void systick_clksource_set(uint32_t systick_clksource)
         SysTick->CTRL &= SYSTICK_CLKSOURCE_HCLK_DIV8;
     }
 }
+
+#if (__MPU_PRESENT == 1)
+
+/*!    
+    \brief      enable arm mpu
+    \param[in]  mpu_control: MPU control value
+      \arg        MPU_MODE_HFNMI_PRIVDEF_NONE: HFNMIENA and PRIVDEFENA are 0
+      \arg        MPU_MODE_HARDFAULT_NMI: use the MPU for memory accesses by HardFault and NMI handlers only
+      \arg        MPU_MODE_PRIV_DEFAULT: enables the default memory map as a background region for privileged access only
+      \arg        MPU_MODE_HFNMI_PRIVDEF: HFNMIENA and PRIVDEFENA are 1
+    \param[out] none
+    \retval     none
+*/
+void armv7_mpu_enable(uint32_t mpu_control)
+{
+  __DMB();
+  MPU->CTRL = mpu_control | MPU_CTRL_ENABLE_Msk;
+#ifdef SCB_SHCSR_MEMFAULTENA_Msk
+  SCB->SHCSR |= SCB_SHCSR_MEMFAULTENA_Msk;
+#endif
+  __DSB();
+  __ISB();
+}
+
+/*!
+    \brief      disable arm mpu
+    \param[in]  none
+    \param[out] none
+    \retval     none
+*/
+void armv7_mpu_disable(void)
+{
+  __DMB();
+#ifdef SCB_SHCSR_MEMFAULTENA_Msk
+  SCB->SHCSR &= ~SCB_SHCSR_MEMFAULTENA_Msk;
+#endif
+  MPU->CTRL  &= ~MPU_CTRL_ENABLE_Msk;
+  __DSB();
+  __ISB();
+}
+
+/*!
+    \brief      mpu set region
+    \param[in]  rbar: rbar register value
+    \param[in]  rasr: rasr register value
+    \param[out] none
+    \retval     none
+*/
+void armv7_mpu_set_region(uint32_t rbar, uint32_t rasr)
+{
+  MPU->RBAR = rbar;
+  MPU->RASR = rasr;
+}
+
+/*!
+    \brief      initialize mpu_region_init_struct with the default values
+    \param[in]  mpu_init_struct: pointer to a mpu_region_init_struct structure
+    \param[out] none
+    \retval     none
+*/
+void mpu_region_struct_para_init(mpu_region_init_struct *mpu_init_struct)
+{
+    mpu_init_struct->region_number       = MPU_REGION_NUMBER0;
+    mpu_init_struct->region_base_address = 0x00000000U;
+    mpu_init_struct->instruction_exec    = MPU_INSTRUCTION_EXEC_PERMIT;
+    mpu_init_struct->access_permission   = MPU_AP_NO_ACCESS;
+    mpu_init_struct->tex_type            = MPU_TEX_TYPE0;
+    mpu_init_struct->access_shareable    = MPU_ACCESS_SHAREABLE;
+    mpu_init_struct->access_cacheable    = MPU_ACCESS_CACHEABLE;
+    mpu_init_struct->access_bufferable   = MPU_ACCESS_BUFFERABLE;
+    mpu_init_struct->subregion_disable   = MPU_SUBREGION_ENABLE;
+    mpu_init_struct->region_size         = MPU_REGION_SIZE_32B;
+}
+
+/*!
+    \brief      configure the MPU region
+    \param[in]  mpu_init_struct: MPU initialization structure
+                  region_number: region number
+                               MPU_REGION_NUMBERn (n=0,..,7)
+                  region_base_address: region base address
+                  region_size: MPU_REGION_SIZE_32B, MPU_REGION_SIZE_64B, MPU_REGION_SIZE_128B, MPU_REGION_SIZE_256B, MPU_REGION_SIZE_512B, 
+                               MPU_REGION_SIZE_1KB, MPU_REGION_SIZE_2KB, MPU_REGION_SIZE_4KB, MPU_REGION_SIZE_8KB, MPU_REGION_SIZE_16KB, 
+                               MPU_REGION_SIZE_32KB, MPU_REGION_SIZE_64KB, MPU_REGION_SIZE_128KB, MPU_REGION_SIZE_256KB, MPU_REGION_SIZE_512KB,
+                               MPU_REGION_SIZE_1MB, MPU_REGION_SIZE_2MB, MPU_REGION_SIZE_4MB, MPU_REGION_SIZE_8MB, MPU_REGION_SIZE_16MB, 
+                               MPU_REGION_SIZE_32MB, MPU_REGION_SIZE_64MB, MPU_REGION_SIZE_128MB, MPU_REGION_SIZE_256MB, MPU_REGION_SIZE_512MB, 
+                               MPU_REGION_SIZE_1GB, MPU_REGION_SIZE_2GB, MPU_REGION_SIZE_4GB
+                  subregion_disable: MPU_SUBREGION_ENABLE, MPU_SUBREGION_DISABLE or 0x00~0xFF
+                  tex_type: MPU_TEX_TYPE0, MPU_TEX_TYPE1, MPU_TEX_TYPE2 or 0x00~0x07
+                  access_permission: MPU_AP_NO_ACCESS, MPU_AP_PRIV_RW, MPU_AP_PRIV_RW_UNPRIV_RO, MPU_AP_FULL_ACCESS, MPU_AP_PRIV_RO,
+                                     MPU_AP_PRIV_UNPRIV_RO
+                  access_shareable: MPU_ACCESS_SHAREABLE, MPU_ACCESS_NON_SHAREABLE
+                  access_cacheable: MPU_ACCESS_CACHEABLE, MPU_ACCESS_NON_CACHEABLE
+                  access_bufferable: MPU_ACCESS_BUFFERABLE, MPU_ACCESS_NON_BUFFERABLE
+                  instruction_exec: MPU_INSTRUCTION_EXEC_PERMIT, MPU_INSTRUCTION_EXEC_NOT_PERMIT
+    \param[out] none
+    \retval     none
+*/
+void mpu_region_config(mpu_region_init_struct *mpu_init_struct)
+{
+    MPU->RNR = mpu_init_struct->region_number;
+    MPU->RBAR = mpu_init_struct->region_base_address;
+    MPU->RASR = ((uint32_t)mpu_init_struct->instruction_exec  << MPU_RASR_XN_Pos) |
+                ((uint32_t)mpu_init_struct->access_permission << MPU_RASR_AP_Pos) |
+                ((uint32_t)mpu_init_struct->tex_type          << MPU_RASR_TEX_Pos)|
+                ((uint32_t)mpu_init_struct->access_shareable  << MPU_RASR_S_Pos)  |
+                ((uint32_t)mpu_init_struct->access_cacheable  << MPU_RASR_C_Pos)  |
+                ((uint32_t)mpu_init_struct->access_bufferable << MPU_RASR_B_Pos)  |
+                ((uint32_t)mpu_init_struct->subregion_disable << MPU_RASR_SRD_Pos)|
+                ((uint32_t)mpu_init_struct->region_size       << MPU_RASR_SIZE_Pos);
+}
+
+/*!
+    \brief      enable the MPU region
+    \param[in]  none
+    \param[out] none
+    \retval     none
+*/
+void mpu_region_enable(void)
+{
+    MPU->RASR |= MPU_RASR_ENABLE_Msk;
+}
+
+#endif /* __MPU_PRESENT */

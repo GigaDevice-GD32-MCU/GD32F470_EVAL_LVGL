@@ -2,11 +2,11 @@
     \file    gd32f4xx_dac.c
     \brief   DAC driver
 
-    \version 2024-01-15, V3.2.0, firmware for GD32F4xx
+    \version 2026-08-14, V3.4.0, firmware for GD32F4xx
 */
 
 /*
-    Copyright (c) 2024, GigaDevice Semiconductor Inc.
+    Copyright (c) 2026, GigaDevice Semiconductor Inc.
 
     Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
@@ -554,17 +554,19 @@ void dac_concurrent_data_set(uint32_t dac_periph, uint32_t dac_align, uint16_t d
 */
 FlagStatus dac_flag_get(uint32_t dac_periph, uint32_t flag)
 {
+    FlagStatus status = RESET;
+
     if(flag & DAC_STAT_FLAG_MASK0){
         /* check DAC_STAT0 flag */
         if(RESET != (DAC_STAT0(dac_periph) & flag)){
-            return SET;
+            status = SET;
         }else{
-            return RESET;
+            status = RESET;
         }
     }else{
         /* illegal parameters */
-        return RESET;
     }
+    return status;
 }
 
 /*!
@@ -636,10 +638,14 @@ void dac_interrupt_disable(uint32_t dac_periph, uint32_t interrupt)
       \arg        DAC_INT_FLAG_DDUDR1: DACx_OUT1 DMA underrun interrupt flag
     \param[out] none
     \retval     the state of DAC interrupt flag(SET or RESET)
+    \note       After the interrupt enable bit is cleared, if the hardware flag remains set, this API will still return RESET.
+                Therefore, in an ISR or during the interrupt-disable flow, this API alone must not be relied upon to determine whether the flag should be cleared.
+                The corresponding flag must be cleared according to the module-specific rules, and the NVIC-pending bit should also be cleared when necessary.
 */
 FlagStatus dac_interrupt_flag_get(uint32_t dac_periph, uint32_t int_flag)
 {
     uint32_t reg1 = 0U, reg2 = 0U;
+    FlagStatus status = RESET;
 
     if(int_flag & DAC_INT_FLAG_MASK0){
         /* check underrun interrupt int_flag */
@@ -651,10 +657,11 @@ FlagStatus dac_interrupt_flag_get(uint32_t dac_periph, uint32_t int_flag)
 
     /*get DAC interrupt flag status */
     if((RESET != reg1) && (RESET != reg2)){
-        return SET;
+       status = SET;
     }else{
-        return RESET;
+       status = RESET;
     }
+    return status;
 }
 
 /*!

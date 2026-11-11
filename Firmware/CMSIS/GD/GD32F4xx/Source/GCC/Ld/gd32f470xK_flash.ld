@@ -168,12 +168,10 @@ SECTIONS
     PROVIDE ( _end = _ebss );
     . = . + __heap_size;
     PROVIDE( _heap_end = . );
+    . = . + __stack_size;
+    PROVIDE( _sp = . ); 
+    . = ALIGN(8);
   } > RAM
-
-  /* Keep the descending main stack at the top of SRAM, away from .bss and heap. */
-  PROVIDE( _stack_limit = ORIGIN(RAM) + LENGTH(RAM) - __stack_size );
-  PROVIDE( _sp = ORIGIN(RAM) + LENGTH(RAM) );
-  ASSERT(_heap_end <= _stack_limit, "RAM overflow: heap and stack overlap")
 
   /* Note: To use TCMRAM, initialization in the startup file is required. */
   _sitcmram = LOADADDR(.tcmram);

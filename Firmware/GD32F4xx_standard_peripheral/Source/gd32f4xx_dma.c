@@ -1,11 +1,11 @@
 /*!
     \file    gd32f4xx_dma.c
     \brief   DMA driver
-    \version 2024-01-15, V3.2.0, firmware for GD32F4xx
+    \version 2026-08-14, V3.4.0, firmware for GD32F4xx
 */
 
 /*
-    Copyright (c) 2024, GigaDevice Semiconductor Inc.
+    Copyright (c) 2026, GigaDevice Semiconductor Inc.
 
     Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
@@ -597,11 +597,13 @@ void dma_switch_buffer_mode_config(uint32_t dma_periph, dma_channel_enum channel
 */
 uint32_t dma_using_memory_get(uint32_t dma_periph, dma_channel_enum channelx)
 {
+    uint32_t reval = DMA_MEMORY_0;
     if((DMA_CHCTL(dma_periph, channelx)) & DMA_CHXCTL_MBS) {
-        return DMA_MEMORY_1;
+        reval = DMA_MEMORY_1;
     } else {
-        return DMA_MEMORY_0;
+        reval = DMA_MEMORY_0;
     }
+    return reval;
 }
 
 /*!
@@ -702,20 +704,22 @@ uint32_t dma_fifo_status_get(uint32_t dma_periph, dma_channel_enum channelx)
 */
 FlagStatus dma_flag_get(uint32_t dma_periph, dma_channel_enum channelx, uint32_t flag)
 {
+    FlagStatus reval = RESET;
     if(channelx < DMA_CH4) {
         if(DMA_INTF0(dma_periph) & DMA_FLAG_ADD(flag, channelx)) {
-            return SET;
+            reval = SET;
         } else {
-            return RESET;
+            reval = RESET;
         }
     } else {
         channelx -= (dma_channel_enum)4;
         if(DMA_INTF1(dma_periph) & DMA_FLAG_ADD(flag, channelx)) {
-            return SET;
+            reval = SET;
         } else {
-            return RESET;
+            reval = RESET;
         }
     }
+    return reval;
 }
 
 /*!
@@ -809,9 +813,13 @@ void dma_interrupt_disable(uint32_t dma_periph, dma_channel_enum channelx, uint3
       \arg        DMA_INT_FLAG_FTF: full transger finish flag
     \param[out] none
     \retval     FlagStatus: SET or RESET
+    \note       After the interrupt enable bit is cleared, if the hardware flag remains set, this API will still return RESET.
+                Therefore, in an ISR or during the interrupt-disable flow, this API alone must not be relied upon to determine whether the flag should be cleared.
+                The corresponding flag must be cleared according to the module-specific rules, and the NVIC-pending bit should also be cleared when necessary.
 */
 FlagStatus dma_interrupt_flag_get(uint32_t dma_periph, dma_channel_enum channelx, uint32_t interrupt)
 {
+    FlagStatus reval = RESET;
     uint32_t interrupt_enable = 0U, interrupt_flag = 0U;
     dma_channel_enum channel_flag_offset = channelx;
     if(channelx < DMA_CH4) {
@@ -868,10 +876,11 @@ FlagStatus dma_interrupt_flag_get(uint32_t dma_periph, dma_channel_enum channelx
     }
 
     if(interrupt_flag && interrupt_enable) {
-        return SET;
+        reval = SET;
     } else {
-        return RESET;
+        reval = RESET;
     }
+    return reval;
 }
 
 /*!

@@ -82,6 +82,9 @@ int main(void)
 {
     systick_config();
 
+    /* SDRAM must be ready before LVGL/TLI use the frame buffers placed in it */
+    exmc_synchronous_dynamic_ram_init();
+
     /* ADC configuration */
     adc_config();
     
