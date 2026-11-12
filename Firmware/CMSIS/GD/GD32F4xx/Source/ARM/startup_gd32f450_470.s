@@ -2,11 +2,11 @@
 ;    \file    startup_gd32f450_470.s
 ;    \brief   start up file
 ;
-;    \version 2024-01-15, V3.2.0, firmware for GD32F4xx
+;    \version 2026-08-14, V3.4.0, firmware for GD32F4xx
 ;*/
 ;
 ;/*  Copyright (c) 2012 ARM LIMITED
-;    Copyright (c) 2024, GigaDevice Semiconductor Inc.
+;    Copyright (c) 2026, GigaDevice Semiconductor Inc.
 ;
 ;   All rights reserved.
 ;   Redistribution and use in source and binary forms, with or without
@@ -187,12 +187,8 @@ Reset_Handler   PROC
                 EXPORT  Reset_Handler                     [WEAK]
                 IMPORT  SystemInit
                 IMPORT  __main
-                IMPORT exmc_synchronous_dynamic_ram_init
                 LDR     R0, =SystemInit
                 BLX     R0
-                LDR     R0, =0x00000004
-                LDR     R1, =exmc_synchronous_dynamic_ram_init
-                BLX     R1
                 LDR     R0, =__main
                 BX      R0
                 ENDP

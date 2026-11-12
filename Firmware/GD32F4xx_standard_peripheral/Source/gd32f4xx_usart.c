@@ -2,11 +2,11 @@
     \file    gd32f4xx_usart.c
     \brief   USART driver
 
-    \version 2024-01-15, V3.2.0, firmware for GD32F4xx
+    \version 2026-08-14, V3.4.0, firmware for GD32F4xx
 */
 
 /*
-    Copyright (c) 2024, GigaDevice Semiconductor Inc.
+    Copyright (c) 2026, GigaDevice Semiconductor Inc.
 
     Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
@@ -849,11 +849,14 @@ void usart_dma_transmit_config(uint32_t usart_periph, uint32_t dmacmd)
 */
 FlagStatus usart_flag_get(uint32_t usart_periph, usart_flag_enum flag)
 {
+    FlagStatus ret = RESET;
+
     if(RESET != (USART_REG_VAL(usart_periph, flag) & BIT(USART_BIT_POS(flag)))) {
-        return SET;
+        ret = SET;
     } else {
-        return RESET;
+        ret = RESET;
     }
+    return ret;
 }
 
 /*!
@@ -946,20 +949,26 @@ void usart_interrupt_disable(uint32_t usart_periph, usart_interrupt_enum interru
       \arg        USART_INT_FLAG_RT: interrupt enable bit of receive timeout event and flag
     \param[out] none
     \retval     FlagStatus: SET or RESET
+    \note       After the interrupt enable bit is cleared, if the hardware flag remains set, this API will still return RESET.
+                Therefore, in an ISR or during the interrupt-disable flow, this API alone must not be relied upon to determine whether the flag should be cleared.
+                The corresponding flag must be cleared according to the module-specific rules, and the NVIC-pending bit should also be cleared when necessary.
 */
 FlagStatus usart_interrupt_flag_get(uint32_t usart_periph, usart_interrupt_flag_enum int_flag)
 {
+    FlagStatus ret = RESET;
     uint32_t intenable = 0U, flagstatus = 0U;
+
     /* get the interrupt enable bit status */
     intenable = (USART_REG_VAL(usart_periph, int_flag) & BIT(USART_BIT_POS(int_flag)));
     /* get the corresponding flag bit status */
     flagstatus = (USART_REG_VAL2(usart_periph, int_flag) & BIT(USART_BIT_POS2(int_flag)));
 
     if((0U != flagstatus) && (0U != intenable)) {
-        return SET;
+        ret = SET;
     } else {
-        return RESET;
+        ret = RESET;
     }
+    return ret;
 }
 
 /*!

@@ -2,11 +2,11 @@
     \file    gd32f4xx_enet.c
     \brief   ENET driver
 
-    \version 2024-01-15, V3.2.0, firmware for GD32F4xx
+    \version 2026-08-14, V3.4.0, firmware for GD32F4xx
 */
 
 /*
-    Copyright (c) 2024, GigaDevice Semiconductor Inc.
+    Copyright (c) 2026, GigaDevice Semiconductor Inc.
     Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
@@ -389,6 +389,8 @@ ErrStatus enet_init(enet_mediamode_enum mediamode, enet_chksumconf_enum checksum
 
         /* read the result of the auto-negotiation */
         enet_phy_write_read(ENET_PHY_READ, PHY_ADDRESS, PHY_SR, &phy_value);
+
+#if(PHY_TYPE == SR8201F || PHY_TYPE == YT8512)
         /* configure the duplex mode of MAC following the auto-negotiation result */
         if((uint16_t)RESET != (phy_value & PHY_DUPLEX_STATUS)) {
             media_temp = ENET_MODE_FULLDUPLEX;
@@ -396,11 +398,25 @@ ErrStatus enet_init(enet_mediamode_enum mediamode, enet_chksumconf_enum checksum
             media_temp = ENET_MODE_HALFDUPLEX;
         }
         /* configure the communication speed of MAC following the auto-negotiation result */
-        if((uint16_t)RESET != (phy_value & PHY_SPEED_STATUS)) {
+        if((uint16_t)RESET !=(phy_value & PHY_SPEED_STATUS)){
+            media_temp |= ENET_SPEEDMODE_100M;
+        }else{
             media_temp |= ENET_SPEEDMODE_10M;
+        }
+#elif (PHY_TYPE == DP83848 || PHY_TYPE == LAN8700)
+        /* configure the duplex mode of MAC following the auto-negotiation result */
+        if((uint16_t)RESET != (phy_value & PHY_DUPLEX_STATUS)) {
+            media_temp = ENET_MODE_FULLDUPLEX;
         } else {
+            media_temp = ENET_MODE_HALFDUPLEX;
+        }
+        /* configure the communication speed of MAC following the auto-negotiation result */
+        if((uint16_t)RESET !=(phy_value & PHY_SPEED_STATUS)){
+            media_temp |= ENET_SPEEDMODE_10M;
+        }else{
             media_temp |= ENET_SPEEDMODE_100M;
         }
+#endif /* PHY_TYPE == SR8201F || PHY_TYPE == YT8512 */
     } else {
         phy_value = (uint16_t)((media_temp & ENET_MAC_CFG_DPM) >> 3);
         phy_value |= (uint16_t)((media_temp & ENET_MAC_CFG_SPD) >> 1);
@@ -934,7 +950,7 @@ ErrStatus enet_frame_receive(uint8_t *buffer, uint32_t bufsize)
             dma_current_rxdesc = (enet_descriptors_struct *)(ENET_DMA_RDTADDR);
         } else {
             /* the next descriptor is the current address, add the descriptor size, and descriptor skip length */
-            dma_current_rxdesc = (enet_descriptors_struct *)(uint32_t)((uint32_t)dma_current_rxdesc + ETH_DMARXDESC_SIZE + (GET_DMA_BCTL_DPSL(ENET_DMA_BCTL)));
+            dma_current_rxdesc = (enet_descriptors_struct *)(uint32_t)((uint32_t)dma_current_rxdesc + ENET_DMARXDESC_SIZE + (GET_DMA_BCTL_DPSL(ENET_DMA_BCTL)));
         }
     }
 
@@ -1001,7 +1017,7 @@ ErrStatus enet_frame_transmit(uint8_t *buffer, uint32_t length)
             dma_current_txdesc = (enet_descriptors_struct *)(ENET_DMA_TDTADDR);
         } else {
             /* the next descriptor is the current address, add the descriptor size, and descriptor skip length */
-            dma_current_txdesc = (enet_descriptors_struct *)(uint32_t)((uint32_t)dma_current_txdesc + ETH_DMATXDESC_SIZE + (GET_DMA_BCTL_DPSL(ENET_DMA_BCTL)));
+            dma_current_txdesc = (enet_descriptors_struct *)(uint32_t)((uint32_t)dma_current_txdesc + ENET_DMATXDESC_SIZE + (GET_DMA_BCTL_DPSL(ENET_DMA_BCTL)));
         }
     }
 
@@ -2234,7 +2250,7 @@ void enet_rxframe_drop(void)
             }
         } else {
             /* the next descriptor is the current address, add the descriptor size, and descriptor skip length */
-            dma_current_rxdesc = (enet_descriptors_struct *)(uint32_t)((uint32_t)dma_current_rxdesc + ETH_DMARXDESC_SIZE + GET_DMA_BCTL_DPSL(ENET_DMA_BCTL));
+            dma_current_rxdesc = (enet_descriptors_struct *)(uint32_t)((uint32_t)dma_current_rxdesc + ENET_DMARXDESC_SIZE + GET_DMA_BCTL_DPSL(ENET_DMA_BCTL));
             if(NULL != dma_current_ptp_rxdesc) {
                 dma_current_ptp_rxdesc++;
             }
@@ -2558,7 +2574,7 @@ ErrStatus enet_ptpframe_receive_enhanced_mode(uint8_t *buffer, uint32_t bufsize,
             dma_current_rxdesc = (enet_descriptors_struct *)(ENET_DMA_RDTADDR);
         } else {
             /* the next descriptor is the current address, add the descriptor size, and descriptor skip length */
-            dma_current_rxdesc = (enet_descriptors_struct *)((uint32_t)dma_current_rxdesc + ETH_DMARXDESC_SIZE + GET_DMA_BCTL_DPSL(ENET_DMA_BCTL));
+            dma_current_rxdesc = (enet_descriptors_struct *)((uint32_t)dma_current_rxdesc + ENET_DMARXDESC_SIZE + GET_DMA_BCTL_DPSL(ENET_DMA_BCTL));
         }
     }
 
@@ -2647,7 +2663,7 @@ ErrStatus enet_ptpframe_transmit_enhanced_mode(uint8_t *buffer, uint32_t length,
             dma_current_txdesc = (enet_descriptors_struct *)(ENET_DMA_TDTADDR);
         } else {
             /* the next descriptor is the current address, add the descriptor size, and descriptor skip length */
-            dma_current_txdesc = (enet_descriptors_struct *)((uint32_t)dma_current_txdesc + ETH_DMATXDESC_SIZE + GET_DMA_BCTL_DPSL(ENET_DMA_BCTL));
+            dma_current_txdesc = (enet_descriptors_struct *)((uint32_t)dma_current_txdesc + ENET_DMATXDESC_SIZE + GET_DMA_BCTL_DPSL(ENET_DMA_BCTL));
         }
     }
 
@@ -2916,7 +2932,7 @@ ErrStatus enet_ptpframe_receive_normal_mode(uint8_t *buffer, uint32_t bufsize, u
             dma_current_ptp_rxdesc = (enet_descriptors_struct *)(dma_current_ptp_rxdesc->status);
         } else {
             /* the next descriptor is the current address, add the descriptor size, and descriptor skip length */
-            dma_current_rxdesc = (enet_descriptors_struct *)(uint32_t)((uint32_t)dma_current_rxdesc + ETH_DMARXDESC_SIZE + GET_DMA_BCTL_DPSL(ENET_DMA_BCTL));
+            dma_current_rxdesc = (enet_descriptors_struct *)(uint32_t)((uint32_t)dma_current_rxdesc + ENET_DMARXDESC_SIZE + GET_DMA_BCTL_DPSL(ENET_DMA_BCTL));
             dma_current_ptp_rxdesc ++;
         }
     }
@@ -3017,7 +3033,7 @@ ErrStatus enet_ptpframe_transmit_normal_mode(uint8_t *buffer, uint32_t length, u
             dma_current_ptp_txdesc = (enet_descriptors_struct *)(dma_current_ptp_txdesc->status);
         } else {
             /* the next descriptor is the current address, add the descriptor size, and descriptor skip length */
-            dma_current_txdesc = (enet_descriptors_struct *)(uint32_t)((uint32_t)dma_current_txdesc + ETH_DMATXDESC_SIZE + GET_DMA_BCTL_DPSL(ENET_DMA_BCTL));
+            dma_current_txdesc = (enet_descriptors_struct *)(uint32_t)((uint32_t)dma_current_txdesc + ENET_DMATXDESC_SIZE + GET_DMA_BCTL_DPSL(ENET_DMA_BCTL));
             dma_current_ptp_txdesc ++;
         }
     }
@@ -3048,7 +3064,7 @@ void enet_wum_filter_config(uint32_t pdata[])
     uint32_t num = 0U;
 
     /* configure ENET_MAC_RWFF register */
-    for(num = 0U; num < ETH_WAKEUP_REGISTER_LENGTH; num++) {
+    for(num = 0U; num < ENET_WAKEUP_REGISTER_LENGTH; num++) {
         ENET_MAC_RWFF = pdata[num];
     }
 }
@@ -3440,7 +3456,7 @@ static void enet_default_init(void)
     reg_value &= MAC_CFG_MASK;
     reg_value |= ENET_WATCHDOG_ENABLE | ENET_JABBER_ENABLE | ENET_INTERFRAMEGAP_96BIT \
                  | ENET_SPEEDMODE_10M | ENET_MODE_HALFDUPLEX | ENET_LOOPBACKMODE_DISABLE \
-                 | ENET_CARRIERSENSE_ENABLE | ENET_RECEIVEOWN_ENABLE \
+                 | ENET_CARRIERSENSE_DISABLE | ENET_RECEIVEOWN_ENABLE \
                  | ENET_RETRYTRANSMISSION_ENABLE | ENET_BACKOFFLIMIT_10 \
                  | ENET_DEFERRALCHECK_DISABLE \
                  | ENET_TYPEFRAME_CRC_DROP_DISABLE \

@@ -1,33 +1,78 @@
-# LVGL V8.3 ported to the GD32F470I EVAL
+# LVGL Ported to GD32F470I EVAL
 
-This project ports `LVGL V8.3.11` to the `GD32F470I EVAL` platform for GUI demonstrations.
+## Overview
 
-## Hardware Information
+This project ports `LVGL` to the `GD32F470I EVAL` evaluation board for GUI demonstrations.
 
-The `GD32F470I Development Kit` is based on:
+The board features a `GD32F470IK` microcontroller based on the `ARM Cortex-M4` core,
+along with a `480 x 272` RGB TFT display and a resistive touch panel.
+The project uses landscape orientation with the `RGB565` pixel format and 16-bit color depth.
 
-- `GD32F470IK` microcontroller (`ARM Cortex-M4` core, FPU, DSP instructions)
-- `3 MB` on-chip Flash memory and `256 KB` on-chip SRAM (including `192 KB` SRAM0 and `64 KB` TCM SRAM)
-- External `32 MB` SDRAM for graphics framebuffers and application data
-- `480 x 272` RGB TFT display with resistive/capacitive touch panel
-- SD card and SPI Flash (`GD25Qxx`) storage support through the board support package
-- On-board high-precision RTC clock and temperature sensor
-- Multiple user LEDs, function keys, and universal expansion pin headers
+Project toolchains include `Keil MDK-ARM (ARM Compiler 6)`, `IAR`, and `GD32EmbeddedBuilder`.
 
-## Project Information
+## Specification
 
-- GUI framework: `LVGL V8.3.11`
-- RTOS: `FreeRTOS V10.4.1`
-- Toolchain: `Keil MDK-ARM (ARM Compiler 6) / IAR / GD32EmbeddedBuilder`
-- Target board: `GD32F470I EVAL`
-- Display configuration: `480 x 272 / RGB565 16-bit color / landscape`
+- **MCU:** GD32F470IK (Cortex-M4, 240MHz)
+- **RAM:** 192KB internal SRAM, 64KB TCM SRAM, 32768KB external SDRAM
+- **Flash:** 3072KB internal
+- **GPU:** IPA
+- **Resolution:** 480*272
+- **Display Size:** 4.3 inch
+- **Interface:** TLI
+- **Color Depth:** 16-bit RGB565
+- **Technology:** a-Si TFT
+- **DPI:** 130 px/inch
+- **Touch Pad:** Resistive touch (SPI)
+
+## Getting Started
+
+The following steps describe a general workflow. Confirm the project paths, software versions,
+power supply requirements, and jumper settings against the actual project and the board manual.
+This project currently supports three integrated development environments (IDEs): Keil MDK, IAR, and GD32EmbeddedBuilder. This document uses GD32EmbeddedBuilder to demonstrate how to build, download, and debug the project.
+
+### Hardware Setup
+
+1. Confirm that the board model is `GD32F470I EVAL`.
+2. Check the RGB display and resistive touch panel connections according to the board manual.
+3. Connect the on-board JLINK debug interface to your PC, and configure the power supply and jumpers as required.
+
+### Software Setup
+
+1. Install `GD32EmbeddedBuilder` for your operating system. Refer to the GD32EmbeddedBuilder software requirements for details.
+2. Install the appropriate J-Link driver software and confirm that your PC recognizes the debugger.
+
+### Build the Project
+
+1. Clone this repository.
+```shell
+  git clone "Repository URL"
+  ```
+2. Open `GD32EmbeddedBuilder` and click **Browse...** to select a local directory as your workspace.
+3. Import the project by selecting **File > Import...** and choosing the project directory (`./Template/GD32EBuilder_project`).
+4. Build the project by right-clicking the project in the project explorer and selecting **Build Project**.
+5. To download and debug the project, right-click the project in the project explorer and select
+	**Debug As > Debug Configurations... > GDB General Debugging**. Configure the settings for your setup,
+	then click **Debug** to download the firmware and start debugging.
+
+### Debugging
+
+Start a debug session using your IDE and JLINK to set breakpoints, step through code, and inspect variables.
+If display or touch issues occur, first check peripheral initialization, display refresh, and touch input handling.
+The available debug options depend on your IDE and project configuration.
 
 ## Third-Party Components
 
-| Category   | In use | Component  | Version     | License         |
-| ---------- | ------ | ---------- | ----------- | --------------- |
-| GUI        | `Yes`  | `LVGL`     | `V 8.3.11`  | `MIT`           |
-| Filesystem | `Yes`  | `FatFs`    | `R0.16`     | `FatFs license` |
-| RTOS       | `Yes`  | `FreeRTOS` | `V 10.4.1`  | `MIT`           |
+| Category | In Use | Component | Version | License |
+| --- | --- | --- | --- | --- |
+| GUI | Yes | `LVGL` | `V8.3.11` | `MIT` |
+| RTOS | Yes | `FreeRTOS` | `V10.4.1` | `MIT` |
+| Filesystem | Yes | `FatFs` | `R0.16` | `FatFs license` |
 
-> When adding a new third-party library, update this table accordingly and retain its license text and copyright notices.
+
+When adding a third-party library, update this table and retain its license text and copyright notices.
+
+## Contribution and Support
+
+If you find any issues with the development board feel free to open an Issue in this repository. For LVGL related issues (features, bugs, etc) please use the main [lvgl repository](https://github.com/lvgl/lvgl).
+
+If you found a bug and found a solution too please send a Pull request. If you are new to Pull requests refer to [Our Guide](https://docs.lvgl.io/master/CONTRIBUTING.html#pull-request) to learn the basics.

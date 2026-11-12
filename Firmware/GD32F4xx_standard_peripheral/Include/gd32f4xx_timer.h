@@ -2,11 +2,11 @@
     \file    gd32f4xx_timer.h
     \brief   definitions for the TIMER
 
-    \version 2024-01-15, V3.2.0, firmware for GD32F4xx
+    \version 2026-08-14, V3.4.0, firmware for GD32F4xx
 */
 
 /*
-    Copyright (c) 2024, GigaDevice Semiconductor Inc.
+    Copyright (c) 2026, GigaDevice Semiconductor Inc.
 
     Redistribution and use in source and binary forms, with or without modification, 
 are permitted provided that the following conditions are met:
@@ -254,7 +254,7 @@ OF SUCH DAMAGE.
 /* TIMER_IRMP */
 #define TIMER1_IRMP_ITI1_RMP             BITS(10,11)         /*!< TIMER1 internal trigger input 1 remap */
 #define TIMER4_IRMP_CI3_RMP              BITS(6,7)           /*!< TIMER4 channel 3 input remap */
-#define TIMER10_IRMP_ITI1_RMP            BITS(0,1)           /*!< TIMER10 internal trigger input 1 remap */
+#define TIMER10_IRMP_CI0_RMP             BITS(0,1)           /*!< TIMER10 channel 0 input remap */
 
 /* TIMER_CFG */
 #define TIMER_CFG_OUTSEL                 BIT(0)              /*!< the output value selection */
@@ -599,14 +599,14 @@ typedef struct
 #define TIMER4_CI3_RMP_LXTAL                TIMER4_IRMP(2)                          /*!< timer4 channel 3 input remap to  LXTAL */
 #define TIMER4_CI3_RMP_RTC_WAKEUP_INT       TIMER4_IRMP(3)                          /*!< timer4 channel 3 input remap to RTC wakeup interrupt */
 
-/* timer10 internal trigger input1 remap */
+/* timer10 channel 0 input remap */
 #define TIMER10_IRMP(regval)                (BITS(0, 1) & ((uint32_t)(regval) << 0U))
-#define TIMER10_ITI1_RMP_GPIO               TIMER10_IRMP(0)                         /*!< timer10 internal trigger input1 remap based on GPIO setting */
-#define TIMER10_ITI1_RMP_RTC_HXTAL_DIV      TIMER10_IRMP(2)                         /*!< timer10 internal trigger input1 remap  HXTAL _DIV(clock used for RTC which is HXTAL clock divided by RTCDIV bits in RCU_CFG0 register) */
+#define TIMER10_CI0_RMP_GPIO                TIMER10_IRMP(0)                         /*!< timer10 channel 0 input remap based on GPIO setting */
+#define TIMER10_CI0_RMP_RTC_HXTAL_DIV       TIMER10_IRMP(2)                         /*!< timer10 channel 0 input remap to HXTAL_DIV(clock used for RTC which is HXTAL clock divided by RTCDIV bits in RCU_CFG0 register) */
 
 /* timerx(x=0,1,2,13,14,15,16) write cc register selection */
-#define TIMER_CHVSEL_ENABLE                  ((uint16_t)0x0002U)                    /*!< write CHxVAL register selection enable  */
-#define TIMER_CHVSEL_DISABLE                 ((uint16_t)0x0000U)                    /*!< write CHxVAL register selection disable */
+#define TIMER_CHVSEL_ENABLE                 ((uint16_t)0x0002U)                     /*!< write CHxVAL register selection enable  */
+#define TIMER_CHVSEL_DISABLE                ((uint16_t)0x0000U)                     /*!< write CHxVAL register selection disable */
 
 /* the output value selection */
 #define TIMER_OUTSEL_ENABLE                 ((uint16_t)0x0001U)                     /*!< output value selection enable */

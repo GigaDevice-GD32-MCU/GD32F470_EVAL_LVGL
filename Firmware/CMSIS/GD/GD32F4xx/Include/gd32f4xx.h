@@ -2,11 +2,11 @@
     \file    gd32f4xx.h
     \brief   general definitions for GD32F4xx
     
-    \version 2024-01-15, V3.2.0, firmware for GD32F4xx  
+    \version 2026-08-14, V3.4.0, firmware for GD32F4xx  
 */
 
 /* Copyright (c) 2012 ARM LIMITED
-   Copyright (c) 2024, GigaDevice Semiconductor Inc.
+   Copyright (c) 2026, GigaDevice Semiconductor Inc.
 
    All rights reserved.
    Redistribution and use in source and binary forms, with or without
@@ -89,9 +89,9 @@
 /* I2S external clock in selection */
 //#define I2S_EXTERNAL_CLOCK_IN          (uint32_t)12288000U
 
-/* GD32F4xx firmware library version number V1.0 */
+/* GD32F4xx firmware library version number V3.4.0 */
 #define __GD32F4xx_STDPERIPH_VERSION_MAIN   (0x03) /*!< [31:24] main version     */
-#define __GD32F4xx_STDPERIPH_VERSION_SUB1   (0x00) /*!< [23:16] sub1 version     */
+#define __GD32F4xx_STDPERIPH_VERSION_SUB1   (0x04) /*!< [23:16] sub1 version     */
 #define __GD32F4xx_STDPERIPH_VERSION_SUB2   (0x00) /*!< [15:8]  sub2 version     */
 #define __GD32F4xx_STDPERIPH_VERSION_RC     (0x00) /*!< [7:0]  release candidate */ 
 #define __GD32F4xx_STDPERIPH_VERSION        ((__GD32F4xx_STDPERIPH_VERSION_MAIN << 24)\
@@ -109,7 +109,8 @@
 typedef enum IRQn
 {
     /* cortex-M4 processor exceptions numbers */
-    NonMaskableInt_IRQn          = -14,    /*!< 2 non maskable interrupt                                 */
+    NonMaskableInt_IRQn          = -14,    /*!< non maskable interrupt                                   */
+    HardFault_IRQn               = -13,    /*!< hard-fault interrupt                                     */
     MemoryManagement_IRQn        = -12,    /*!< 4 cortex-M4 memory management interrupt                  */
     BusFault_IRQn                = -11,    /*!< 5 cortex-M4 bus fault interrupt                          */
     UsageFault_IRQn              = -10,    /*!< 6 cortex-M4 usage fault interrupt                        */
@@ -354,24 +355,6 @@ typedef enum {ERROR = 0, SUCCESS = !ERROR} ErrStatus;
 /* option byte and debug memory map */
 #define OB_BASE               ((uint32_t)0x1FFEC000U)        /*!< OB base address                  */
 #define DBG_BASE              ((uint32_t)0xE0042000U)        /*!< DBG base address                 */
-
-
-#define BITBAND(addr, bitnum)       ((addr & 0xF0000000) + 0x2000000 + ((addr & 0xFFFFF) << 5) + (bitnum << 2))
-#define MEM_ADDR(addr)              *((volatile unsigned long *)(addr))
-#define BIT_ADDR(addr, bitnum)      MEM_ADDR(BITBAND(addr, bitnum))
-
-#define GPIOA_OCTL_ADDR             (GPIOA + 0x14U)   //GPIOA OCTL base address
-#define GPIOB_OCTL_ADDR             (GPIOB + 0x14U)   //GPIOB OCTL base address
-
-#define GPIOA_ISTAT_ADDR             (GPIOA + 0x10U)   //GPIOA ISTAT base address
-#define GPIOB_ISTAT_ADDR             (GPIOB + 0x10U)   //GPIOB ISTAT base address
-
-#define PAout(n)                    BIT_ADDR(GPIOA_OCTL_ADDR, n)
-#define PBout(n)                    BIT_ADDR(GPIOB_OCTL_ADDR, n)
-
-#define PAin(n)                     BIT_ADDR(GPIOA_ISTAT_ADDR, n)
-#define PBin(n)                     BIT_ADDR(GPIOB_ISTAT_ADDR, n)
-
 
 /* define marco USE_STDPERIPH_DRIVER */
 #if !defined  USE_STDPERIPH_DRIVER

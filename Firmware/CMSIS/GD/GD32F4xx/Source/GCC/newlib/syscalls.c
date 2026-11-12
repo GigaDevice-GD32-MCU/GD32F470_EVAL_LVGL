@@ -2,7 +2,7 @@
     \file    syscall.c
     \brief   system calls file
 
-    \version 2026-02-05, V3.3.3, firmware for GD32F4xx
+    \version 2026-08-14, V3.4.0, firmware for GD32F4xx
 */
 
 /*

@@ -2,11 +2,11 @@
     \file    gd32f4xx_rcu.h
     \brief   definitions for the RCU
     
-    \version 2024-01-15, V3.2.0, firmware for GD32F4xx
+    \version 2026-08-14, V3.4.0, firmware for GD32F4xx
 */
 
 /*
-    Copyright (c) 2024, GigaDevice Semiconductor Inc.
+    Copyright (c) 2026, GigaDevice Semiconductor Inc.
 
     Redistribution and use in source and binary forms, with or without modification, 
 are permitted provided that the following conditions are met:
@@ -1018,10 +1018,6 @@ typedef enum
 #define RCU_PLLI2SN_MUL_MIN             50U
 #define RCU_PLLI2SN_MUL_MAX             500U
 
-/* The PLLI2S Q output frequency division factor from PLLI2S VCO clock */
-#define RCU_PLLI2SQ_DIV_MIN             2U
-#define RCU_PLLI2SQ_DIV_MAX             15U
-
 /* The PLLI2S R output frequency division factor from PLLI2S VCO clock */
 #define RCU_PLLI2SR_DIV_MIN             2U
 #define RCU_PLLI2SR_DIV_MAX             7U
@@ -1034,10 +1030,6 @@ typedef enum
 /* The PLLSAI P output frequency division factor from PLLSAI VCO clock */
 #define RCU_PLLSAIP_DIV_MIN             2U
 #define RCU_PLLSAIP_DIV_MAX             8U
-
-/* The PLLSAI Q output frequency division factor from PLLSAI VCO clock */
-#define RCU_PLLSAIQ_DIV_MIN             2U
-#define RCU_PLLSAIQ_DIV_MAX             15U
 
 /* The PLLSAI R output frequency division factor from PLLSAI VCO clock */
 #define RCU_PLLSAIR_DIV_MIN             2U

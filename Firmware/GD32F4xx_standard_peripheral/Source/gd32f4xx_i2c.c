@@ -2,11 +2,11 @@
     \file    gd32f4xx_i2c.c
     \brief   I2C driver
 
-    \version 2024-01-15, V3.2.0, firmware for GD32F4xx
+    \version 2026-08-14, V3.4.0, firmware for GD32F4xx
 */
 
 /*
-    Copyright (c) 2024, GigaDevice Semiconductor Inc.
+    Copyright (c) 2026, GigaDevice Semiconductor Inc.
 
     Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
@@ -573,20 +573,20 @@ void i2c_analog_noise_filter_enable(uint32_t i2c_periph)
                 only one parameter can be selected which is shown as below:
       \arg        I2C_DF_DISABLE: disable digital noise filter
       \arg        I2C_DF_1PCLK: enable digital noise filter and the maximum filtered spiker's length 1 PCLK1
-      \arg        I2C_DF_2PCLK: enable digital noise filter and the maximum filtered spiker's length 2 PCLK1
-      \arg        I2C_DF_3PCLK: enable digital noise filter and the maximum filtered spiker's length 3 PCLK1
-      \arg        I2C_DF_4PCLK: enable digital noise filter and the maximum filtered spiker's length 4 PCLK1
-      \arg        I2C_DF_5PCLK: enable digital noise filter and the maximum filtered spiker's length 5 PCLK1
-      \arg        I2C_DF_6PCLK: enable digital noise filter and the maximum filtered spiker's length 6 PCLK1
-      \arg        I2C_DF_7PCLK: enable digital noise filter and the maximum filtered spiker's length 7 PCLK1
-      \arg        I2C_DF_8PCLK: enable digital noise filter and the maximum filtered spiker's length 8 PCLK1
-      \arg        I2C_DF_9PCLK: enable digital noise filter and the maximum filtered spiker's length 9 PCLK1
-      \arg        I2C_DF_10PCLK: enable digital noise filter and the maximum filtered spiker's length 10 PCLK1
-      \arg        I2C_DF_11CLK: enable digital noise filter and the maximum filtered spiker's length 11 PCLK1
-      \arg        I2C_DF_12CLK: enable digital noise filter and the maximum filtered spiker's length 12 PCLK1
-      \arg        I2C_DF_13PCLK: enable digital noise filter and the maximum filtered spiker's length 13 PCLK1
-      \arg        I2C_DF_14PCLK: enable digital noise filter and the maximum filtered spiker's length 14 PCLK1
-      \arg        I2C_DF_15PCLK: enable digital noise filter and the maximum filtered spiker's length 15 PCLK1
+      \arg        I2C_DF_2PCLKS: enable digital noise filter and the maximum filtered spiker's length 2 PCLK1
+      \arg        I2C_DF_3PCLKS: enable digital noise filter and the maximum filtered spiker's length 3 PCLK1
+      \arg        I2C_DF_4PCLKS: enable digital noise filter and the maximum filtered spiker's length 4 PCLK1
+      \arg        I2C_DF_5PCLKS: enable digital noise filter and the maximum filtered spiker's length 5 PCLK1
+      \arg        I2C_DF_6PCLKS: enable digital noise filter and the maximum filtered spiker's length 6 PCLK1
+      \arg        I2C_DF_7PCLKS: enable digital noise filter and the maximum filtered spiker's length 7 PCLK1
+      \arg        I2C_DF_8PCLKS: enable digital noise filter and the maximum filtered spiker's length 8 PCLK1
+      \arg        I2C_DF_9PCLKS: enable digital noise filter and the maximum filtered spiker's length 9 PCLK1
+      \arg        I2C_DF_10PCLKS: enable digital noise filter and the maximum filtered spiker's length 10 PCLK1
+      \arg        I2C_DF_11PCLKS: enable digital noise filter and the maximum filtered spiker's length 11 PCLK1
+      \arg        I2C_DF_12PCLKS: enable digital noise filter and the maximum filtered spiker's length 12 PCLK1
+      \arg        I2C_DF_13PCLKS: enable digital noise filter and the maximum filtered spiker's length 13 PCLK1
+      \arg        I2C_DF_14PCLKS: enable digital noise filter and the maximum filtered spiker's length 14 PCLK1
+      \arg        I2C_DF_15PCLKS: enable digital noise filter and the maximum filtered spiker's length 15 PCLK1
     \param[out] none
     \retval     none
 */
@@ -674,11 +674,15 @@ void i2c_sam_timeout_disable(uint32_t i2c_periph)
 */
 FlagStatus i2c_flag_get(uint32_t i2c_periph, i2c_flag_enum flag)
 {
+    FlagStatus status;
+    
     if(RESET != (I2C_REG_VAL(i2c_periph, flag) & BIT(I2C_BIT_POS(flag)))) {
-        return SET;
+        status = SET;
     } else {
-        return RESET;
+        status = RESET;
     }
+    
+    return status;
 }
 
 /*!
@@ -777,10 +781,14 @@ void i2c_interrupt_disable(uint32_t i2c_periph, i2c_interrupt_enum interrupt)
       \arg        I2C_INT_FLAG_RFR: rxframe rise interrupt flag
     \param[out] none
     \retval     FlagStatus: SET or RESET
+    \note       After the interrupt enable bit is cleared, if the hardware flag remains set, this API will still return RESET.
+                Therefore, in an ISR or during the interrupt-disable flow, this API alone must not be relied upon to determine whether the flag should be cleared.
+                The corresponding flag must be cleared according to the module-specific rules, and the NVIC-pending bit should also be cleared when necessary.
 */
 FlagStatus i2c_interrupt_flag_get(uint32_t i2c_periph, i2c_interrupt_flag_enum int_flag)
 {
     uint32_t intenable = 0U, flagstatus = 0U, bufie;
+    FlagStatus status;
 
     /* check BUFIE */
     bufie = I2C_CTL1(i2c_periph)&I2C_CTL1_BUFIE;
@@ -797,11 +805,14 @@ FlagStatus i2c_interrupt_flag_get(uint32_t i2c_periph, i2c_interrupt_flag_enum i
             intenable = 0U;
         }
     }
+    
     if((0U != flagstatus) && (0U != intenable)) {
-        return SET;
+        status = SET;
     } else {
-        return RESET;
+        status = RESET;
     }
+    
+    return status;
 }
 
 /*!

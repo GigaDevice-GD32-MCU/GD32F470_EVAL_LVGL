@@ -2,11 +2,11 @@
     \file    gd32f4xx_timer.c
     \brief   TIMER driver
 
-    \version 2024-01-15, V3.2.0, firmware for GD32F4xx
+    \version 2026-08-14, V3.4.0, firmware for GD32F4xx
 */
 
 /*
-    Copyright (c) 2024, GigaDevice Semiconductor Inc.
+    Copyright (c) 2026, GigaDevice Semiconductor Inc.
 
     Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
@@ -1864,8 +1864,8 @@ void timer_external_clock_mode1_disable(uint32_t timer_periph)
       \arg        TIMER4_CI3_RMP_IRC32K: timer4 channel 3 input remap to IRC32K
       \arg        TIMER4_CI3_RMP_LXTAL: timer4 channel 3 input remap to  LXTAL
       \arg        TIMER4_CI3_RMP_RTC_WAKEUP_INT: timer4 channel 3 input remap to RTC wakeup interrupt
-      \arg        TIMER10_ITI1_RMP_GPIO: timer10 internal trigger input1 remap based on GPIO setting
-      \arg        TIMER10_ITI1_RMP_RTC_HXTAL_DIV: timer10 internal trigger input1 remap  HXTAL _DIV(clock used for RTC which is HXTAL clock divided by RTCDIV bits in RCU_CFG0 register)
+      \arg        TIMER10_CI0_RMP_GPIO: timer10 channel 0 input remap to GPIO pin
+      \arg        TIMER10_CI0_RMP_RTC_HXTAL_DIV: timer10 channel 0 input remap to HXTAL_DIV(clock used for RTC which is HXTAL clock divided by RTCDIV bits in RCU_CFG0 register)
     \param[out] none
     \retval     none
 */
@@ -1938,11 +1938,15 @@ void timer_output_value_selection_config(uint32_t timer_periph, uint16_t outsel)
 */
 FlagStatus timer_flag_get(uint32_t timer_periph, uint32_t flag)
 {
+    FlagStatus timer_flag = RESET;
+    
     if(RESET != (TIMER_INTF(timer_periph) & flag)) {
-        return SET;
+        timer_flag = SET;
     } else {
-        return RESET;
+        timer_flag = RESET;
     }
+    
+    return timer_flag;
 }
 
 /*!
@@ -2027,16 +2031,23 @@ void timer_interrupt_disable(uint32_t timer_periph, uint32_t interrupt)
       \arg        TIMER_INT_FLAG_BRK:  break interrupt flag,TIMERx(x=0,7)
     \param[out] none
     \retval     FlagStatus: SET or RESET
+    \note       After the interrupt enable bit is cleared, if the hardware flag remains set, this API will still return RESET.
+                Therefore, in an ISR or during the interrupt-disable flow, this API alone must not be relied upon to determine whether the flag should be cleared.
+                The corresponding flag must be cleared according to the module-specific rules, and the NVIC-pending bit should also be cleared when necessary.
 */
 FlagStatus timer_interrupt_flag_get(uint32_t timer_periph, uint32_t interrupt)
 {
+    FlagStatus timer_interrupt_flag = RESET;
+    
     uint32_t val;
     val = (TIMER_DMAINTEN(timer_periph) & interrupt);
     if((RESET != (TIMER_INTF(timer_periph) & interrupt)) && (RESET != val)) {
-        return SET;
+        timer_interrupt_flag = SET;
     } else {
-        return RESET;
+        timer_interrupt_flag = RESET;
     }
+    
+    return timer_interrupt_flag;
 }
 
 /*!

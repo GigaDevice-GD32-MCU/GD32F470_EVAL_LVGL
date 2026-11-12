@@ -72,8 +72,6 @@ Zerobss:
   bcc FillZerobss
 /* Call SystemInit function */
   bl  SystemInit
-/* Initialize the external SDRAM before any access to 0xC0000000 */
-  bl  exmc_synchronous_dynamic_ram_init
 /* Call static constructors */
   bl __libc_init_array
 /*Call the main function */

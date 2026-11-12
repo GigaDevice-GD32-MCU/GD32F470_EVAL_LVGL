@@ -2,11 +2,11 @@
 ;    \file    startup_gd32f450_470.s
 ;    \brief   start up file
 ;
-;    \version 2024-01-15, V3.2.0, firmware for GD32F4xx
+;    \version 2026-08-14, V3.4.0, firmware for GD32F4xx
 ;*/
 ;
 ;/*  Copyright (c) 2012 ARM LIMITED
-;    Copyright (c) 2024, GigaDevice Semiconductor Inc.
+;    Copyright (c) 2026, GigaDevice Semiconductor Inc.
 ;
 ;   All rights reserved.
 ;   Redistribution and use in source and binary forms, with or without
@@ -44,7 +44,6 @@
 
         EXTERN  __iar_program_start
         EXTERN  SystemInit
-        EXTERN  exmc_synchronous_dynamic_ram_init
         PUBLIC  __vector_table
 
         DATA
@@ -171,9 +170,6 @@ __vector_table
         SECTION .text:CODE:NOROOT:REORDER(2)
 Reset_Handler
         LDR     R0, =SystemInit
-        BLX     R0
-        ; initialize the external SDRAM before any access to 0xC0000000
-        LDR     R0, =exmc_synchronous_dynamic_ram_init
         BLX     R0
         LDR     R0, =__iar_program_start
         BX      R0

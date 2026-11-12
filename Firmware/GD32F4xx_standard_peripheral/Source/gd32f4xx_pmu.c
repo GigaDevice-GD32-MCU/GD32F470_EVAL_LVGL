@@ -2,11 +2,11 @@
     \file    gd32f4xx_pmu.c
     \brief   PMU driver
 
-    \version 2024-01-15, V3.2.0, firmware for GD32F4xx
+    \version 2026-08-14, V3.4.0, firmware for GD32F4xx
 */
 
 /*
-    Copyright (c) 2024, GigaDevice Semiconductor Inc.
+    Copyright (c) 2026, GigaDevice Semiconductor Inc.
 
     Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
@@ -210,6 +210,8 @@ void pmu_to_sleepmode(uint8_t sleepmodecmd)
     if(WFI_CMD == sleepmodecmd) {
         __WFI();
     } else {
+        __SEV();
+        __WFE();
         __WFE();
     }
 }
@@ -378,11 +380,13 @@ void pmu_backup_write_disable(void)
 */
 FlagStatus pmu_flag_get(uint32_t flag)
 {
+    FlagStatus status;
     if(PMU_CS & flag) {
-        return SET;
+        status = SET;
     } else {
-        return RESET;
+        status = RESET;
     }
+    return status;
 }
 
 /*!

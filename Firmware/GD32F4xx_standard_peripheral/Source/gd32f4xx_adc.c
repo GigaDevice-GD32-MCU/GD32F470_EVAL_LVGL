@@ -2,11 +2,11 @@
     \file    gd32f4xx_adc.c
     \brief   ADC driver
 
-    \version 2024-01-15, V3.2.0, firmware for GD32F4xx
+    \version 2026-08-14, V3.4.0, firmware for GD32F4xx
 */
 
 /*
-    Copyright (c) 2024, GigaDevice Semiconductor Inc.
+    Copyright (c) 2026, GigaDevice Semiconductor Inc.
 
     Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
@@ -87,6 +87,7 @@ void adc_deinit(void)
 */
 void adc_clock_config(uint32_t prescaler)
 {
+    rcu_periph_clock_enable(RCU_ADC0);
     ADC_SYNCCTL &= ~((uint32_t)ADC_SYNCCTL_ADCCK);
     ADC_SYNCCTL |= (uint32_t) prescaler;
 }
@@ -984,6 +985,9 @@ FlagStatus adc_inserted_software_startconv_flag_get(uint32_t adc_periph)
     \arg        ADC_INT_FLAG_ROVF: routine data register overflow interrupt
     \param[out] none
     \retval     FlagStatus: SET or RESET
+    \note       After the interrupt enable bit is cleared, if the hardware flag remains set, this API will still return RESET.
+                Therefore, in an ISR or during the interrupt-disable flow, this API alone must not be relied upon to determine whether the flag should be cleared.
+                The corresponding flag must be cleared according to the module-specific rules, and the NVIC-pending bit should also be cleared when necessary.
 */
 FlagStatus adc_interrupt_flag_get(uint32_t adc_periph, uint32_t adc_interrupt)
 {

@@ -2,11 +2,11 @@
     \file    gd32f4xx_enet.h
     \brief   definitions for the ENET
 
-    \version 2024-01-15, V3.2.0, firmware for GD32F4xx
+    \version 2026-08-14, V3.4.0, firmware for GD32F4xx
 */
 
 /*
-    Copyright (c) 2024, GigaDevice Semiconductor Inc.
+    Copyright (c) 2026, GigaDevice Semiconductor Inc.
 
     Redistribution and use in source and binary forms, with or without modification, 
 are permitted provided that the following conditions are met:
@@ -66,6 +66,9 @@ OF SUCH DAMAGE.
 #ifndef _PHY_H_
 #define DP83848                          0
 #define LAN8700                          1
+#define SR8201F                          2
+#define RTL8201F                         2
+#define YT8512                           3
 #define PHY_TYPE                         DP83848
 
 #define PHY_ADDRESS                      ((uint16_t)1U)                         /*!< phy address determined by the hardware */
@@ -107,6 +110,14 @@ OF SUCH DAMAGE.
 #define PHY_SR                           16U                                    /*!< tranceiver status register */
 #define PHY_SPEED_STATUS                 ((uint16_t)0x0002)                     /*!< configured information of speed: 10Mbit/s */
 #define PHY_DUPLEX_STATUS                ((uint16_t)0x0004)                     /*!< configured information of duplex: full-duplex */
+#elif(PHY_TYPE == SR8201F)
+#define PHY_SR                           PHY_REG_BCR                            /*!< tranceiver status register */
+#define PHY_SPEED_STATUS                 ((uint16_t)0x2000)                     /*!< configured information of speed: 100Mbit/s */
+#define PHY_DUPLEX_STATUS                ((uint16_t)0x0100)                     /*!< configured information of duplex: full-duplex */
+#elif(PHY_TYPE == YT8512)
+#define PHY_SR                           17U                                    /*!< tranceiver status register */
+#define PHY_SPEED_STATUS                 ((uint16_t)0x4000)                     /*!< configured information of speed: 100Mbit/s */
+#define PHY_DUPLEX_STATUS                ((uint16_t)0x2000)                     /*!< configured information of duplex: full-duplex */
 #endif /* PHY_TYPE */
 
 #endif /* _PHY_H_ */
@@ -1437,15 +1448,15 @@ typedef struct
 #define ENET_MSC_PRESET_MASK                      (~(ENET_MSC_CTL_PMC | ENET_MSC_CTL_AFHPM))    /*!< ENET_MSC_CTL preset mask */
 
 #ifdef SELECT_DESCRIPTORS_ENHANCED_MODE
-#define ETH_DMATXDESC_SIZE                        ((uint32_t)0x00000020U)                       /*!< TxDMA enhanced descriptor size */
-#define ETH_DMARXDESC_SIZE                        ((uint32_t)0x00000020U)                       /*!< RxDMA enhanced descriptor size */
+#define ENET_DMATXDESC_SIZE                        ((uint32_t)0x00000020U)                       /*!< TxDMA enhanced descriptor size */
+#define ENET_DMARXDESC_SIZE                        ((uint32_t)0x00000020U)                       /*!< RxDMA enhanced descriptor size */
 #else
-#define ETH_DMATXDESC_SIZE                        ((uint32_t)0x00000010U)                       /*!< TxDMA descriptor size */
-#define ETH_DMARXDESC_SIZE                        ((uint32_t)0x00000010U)                       /*!< RxDMA descriptor size */
+#define ENET_DMATXDESC_SIZE                        ((uint32_t)0x00000010U)                       /*!< TxDMA descriptor size */
+#define ENET_DMARXDESC_SIZE                        ((uint32_t)0x00000010U)                       /*!< RxDMA descriptor size */
 #endif /* SELECT_DESCRIPTORS_ENHANCED_MODE */ 
 
 /* ENET remote wake-up frame register length */
-#define ETH_WAKEUP_REGISTER_LENGTH                8U                                            /*!< remote wake-up frame register length */
+#define ENET_WAKEUP_REGISTER_LENGTH                8U                                            /*!< remote wake-up frame register length */
 
 /* ENET frame size */ 
 #define ENET_MAX_FRAME_SIZE                       1524U                                         /*!< header + frame_extra + payload + CRC */    
