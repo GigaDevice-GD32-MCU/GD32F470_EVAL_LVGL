@@ -3,9 +3,7 @@
 #include "ff.h"
 
 static FATFS   fs;
-static FRESULT fr;
 static DIR     dir;
-static DIR     DirInfo;
 static FILINFO fileinfo;    //文件信息
 char file_name[FILE_NUM][NAME_LENGTH];//文件名
 char folder_name[FOLDER_NUM][NAME_LENGTH];//文件夹名
@@ -28,7 +26,6 @@ extern void filelist_btnevent_handler(lv_obj_t *obj, lv_event_t event);
 //遍历文件 显示到屏幕
 uint8_t mf_scan_file(char *path)
 {
-    int i, j;
     FRESULT res;
     char *fn;   /* This function is assuming non-Unicode cfg. */
     deinit_list();
@@ -42,7 +39,8 @@ uint8_t mf_scan_file(char *path)
             if(fileinfo.fattrib & AM_ARC) {                    /* 读取的是文件名字 */
                 fn = *fileinfo.altname ? fileinfo.fname : fileinfo.fname;
 #if  ACTIVE_ALL_FILE
-                sprintf(file_name[file_cnt], "%s", fn); //拼接路径名
+                /* fn 最长可达 FF_MAX_LFN，必须截断，否则会冲毁相邻全局变量 */
+                snprintf(file_name[file_cnt], NAME_LENGTH, "%s", fn);
                 file_cnt++;
                 if(file_cnt >= FILE_NUM) {
                     break;
@@ -50,7 +48,7 @@ uint8_t mf_scan_file(char *path)
 #endif
 #if  !ACTIVE_ALL_FILE
                 if(strstr(fileinfo.fname, ".bin")) {
-                    sprintf(file_name[file_cnt], "%s", fn); //拼接路径名
+                    snprintf(file_name[file_cnt], NAME_LENGTH, "%s", fn);
                     file_cnt++;
                     if(file_cnt >= FILE_NUM) {
                         break;
@@ -61,7 +59,7 @@ uint8_t mf_scan_file(char *path)
 #endif
             } else if(fileinfo.fattrib & AM_DIR) {       /* 读取的是文件夹名字 */
                 fn = *fileinfo.altname ? fileinfo.fname : fileinfo.fname;
-                sprintf(folder_name[folder_cnt], "%s", fn); //拼接路径名
+                snprintf(folder_name[folder_cnt], NAME_LENGTH, "%s", fn);
 
                 folder_cnt++;
                 if(folder_cnt >= FOLDER_NUM) {
@@ -92,29 +90,54 @@ void deinit_list2(void)
     memset(file_name, 0, FILE_NUM * NAME_LENGTH * sizeof(char));
     memset(folder_name, 0, FOLDER_NUM * NAME_LENGTH * sizeof(char));
     memset(current_path, 0, sizeof(current_path));
-    strncpy((char *)(current_path), mountsel, 3);  //modify spiflash  "1:"
+    strncpy((char *)(current_path), mountsel, sizeof(current_path) - 1);  //modify spiflash  "1:"
     printf("deinit_list: current path is %s\r\n", (char *)(current_path));
     free(p);
     free(q);
+    p = NULL;
+    q = NULL;
+}
+
+bool path_push(const char *name)
+{
+    size_t cur_len;
+    size_t name_len;
+
+    if(name == NULL || name[0] == '\0') {
+        return false;
+    }
+
+    current_path[PATH_LENGTH - 1] = '\0';
+    cur_len = strlen((char *)current_path);
+    name_len = strlen(name);
+
+    /* cur_len + '/' + name + '\0' */
+    if(cur_len + 1U + name_len + 1U > PATH_LENGTH) {
+        return false;
+    }
+
+    current_path[cur_len] = '/';
+    memcpy(&current_path[cur_len + 1U], name, name_len + 1U);
+    return true;
 }
 
 uint8_t get_current_path(void)
 {
     char *p1 = NULL;
-    uint8_t length, i;
-    uint8_t tmp_path[PATH_LEN];
-    memset(tmp_path, 0, PATH_LEN * sizeof(uint8_t));
 
-    /* 获取当前路径，存储到tmp_path */
-    for(i = 0; i < PATH_LEN; i++) {
-        tmp_path[i] = current_path[i];
-    }
+    current_path[PATH_LENGTH - 1] = '\0';
+
     /* strrchr：查找字符串'/',从后往前的第一个出现的位置 */
     p1 = strrchr((char *)(current_path), '/');
-    length = (p1 - (char *)(current_path)) / (sizeof(char));
-    memset(current_path, 0, PATH_LEN * sizeof(uint8_t));
-    /* 将tmp_path中前length个字节复制到current_path */
-    strncpy((char *)(current_path), (char *)tmp_path, length);
+    if(p1 != NULL) {
+        *p1 = '\0';  /* 直接截断，避免临时缓冲区和空指针运算 */
+    }
+
+    if(current_path[0] == '\0') {
+        memset(current_path, 0, sizeof(current_path));
+        strncpy((char *)(current_path), mountsel, sizeof(current_path) - 1);
+    }
+
     if(strcmp(mountsel, (char *)(current_path)) != 0) {  //modify spiflash  "1:"
         return 1;
     } else {
@@ -132,5 +155,5 @@ void refersh_parameter(void)
 
 void scanfiles_test()
 {
-    fr = f_mount(&fs, "0:", 1);
+    (void)f_mount(&fs, "0:", 1);
 }
