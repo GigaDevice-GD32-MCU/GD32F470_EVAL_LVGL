@@ -2070,24 +2070,8 @@ static lv_font_fmt_txt_dsc_t font_dsc = {
 };
 
 
-static const uint8_t * __user_font_get_bitmap(const lv_font_t * font, uint32_t unicode_letter) {
-    lv_font_fmt_txt_dsc_t * fdsc = (lv_font_fmt_txt_dsc_t *) font->dsc;
-
-    if(unicode_letter < fdsc->cmaps[0].range_start) return NULL;
-
-    uint32_t i;
-    for(i = 0; fdsc->cmaps[0].unicode_list[i] != 0; i++) {
-        if(fdsc->cmaps[0].unicode_list[i] == unicode_letter) {
-            const lv_font_fmt_txt_glyph_dsc_t * gdsc = &fdsc->glyph_dsc[i];
-            return &fdsc->glyph_bitmap[gdsc->bitmap_index];
-        }
-    }
-    return NULL;
-}
-
-
 static bool __user_font_get_glyph_dsc(const lv_font_t * font, lv_font_glyph_dsc_t * dsc_out, uint32_t unicode_letter, uint32_t unicode_letter_next) {
-    lv_font_fmt_txt_dsc_t * fdsc = (lv_font_fmt_txt_dsc_t *) font->dsc;
+    const lv_font_fmt_txt_dsc_t * fdsc = (const lv_font_fmt_txt_dsc_t *) font->dsc;
 
     if(unicode_letter < fdsc->cmaps[0].range_start) return false;
 
@@ -2100,7 +2084,10 @@ static bool __user_font_get_glyph_dsc(const lv_font_t * font, lv_font_glyph_dsc_
             dsc_out->box_w = gdsc->box_w;
             dsc_out->ofs_x = gdsc->ofs_x;
             dsc_out->ofs_y = gdsc->ofs_y;
-            dsc_out->bpp   = fdsc->bpp;
+            dsc_out->format = (lv_font_glyph_format_t)fdsc->bpp;
+            dsc_out->stride = 0;
+            dsc_out->is_placeholder = 0;
+            dsc_out->gid.index = i;
             return true;
         }
     }
@@ -2114,7 +2101,7 @@ static bool __user_font_get_glyph_dsc(const lv_font_t * font, lv_font_glyph_dsc_
 //未用排序和顺序查表
 const lv_font_t arail_bold_10 = {
     .dsc = &font_dsc,
-    .get_glyph_bitmap = __user_font_get_bitmap,
+    .get_glyph_bitmap = lv_font_get_bitmap_fmt_txt,
     .get_glyph_dsc = __user_font_get_glyph_dsc,
     .line_height = 16,
     .base_line = 0,

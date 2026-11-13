@@ -1749,7 +1749,6 @@ static const lv_font_fmt_txt_cmap_t cmaps[] = {
 };
 
 
-static lv_font_fmt_txt_glyph_cache_t glyph_cache;
 
 
 static lv_font_fmt_txt_dsc_t font_dsc = {
@@ -1763,7 +1762,6 @@ static lv_font_fmt_txt_dsc_t font_dsc = {
     .kern_dsc = NULL,
     .kern_classes = 0,
 
-    .cache = &glyph_cache,
 };
 
 
@@ -1785,50 +1783,25 @@ static int binsearch(const uint16_t *sortedSeq, int seqLength, uint16_t keyData)
 }
 
 
-static const uint8_t * __user_font_get_bitmap(const lv_font_t * font, uint32_t unicode_letter) {
-    lv_font_fmt_txt_dsc_t * fdsc = (lv_font_fmt_txt_dsc_t *) font->dsc;
-
-    if( unicode_letter<fdsc->cmaps[0].range_start || unicode_letter>fdsc->cmaps[0].range_length ) return false;
-
-    int i;
-    if( unicode_letter==fdsc->cache->last_letter ){
-        i = fdsc->cache->last_glyph_id;
-    }
-    else{
-        i = binsearch(fdsc->cmaps[0].unicode_list, fdsc->cmaps[0].list_length, unicode_letter);
-    }
-    if( i != -1 ) {
-        const lv_font_fmt_txt_glyph_dsc_t * gdsc = &fdsc->glyph_dsc[i];
-        fdsc->cache->last_glyph_id = i;
-        fdsc->cache->last_letter = unicode_letter;
-        return &fdsc->glyph_bitmap[gdsc->bitmap_index];
-    }
-    return NULL;
-}
-
-
 static bool __user_font_get_glyph_dsc(const lv_font_t * font, lv_font_glyph_dsc_t * dsc_out, uint32_t unicode_letter, uint32_t unicode_letter_next) {
-    lv_font_fmt_txt_dsc_t * fdsc = (lv_font_fmt_txt_dsc_t *) font->dsc;
+    const lv_font_fmt_txt_dsc_t * fdsc = (const lv_font_fmt_txt_dsc_t *) font->dsc;
+
+    LV_UNUSED(unicode_letter_next);
 
     if( unicode_letter<fdsc->cmaps[0].range_start || unicode_letter>fdsc->cmaps[0].range_length ) return false;
 
-    int i;
-    if( unicode_letter==fdsc->cache->last_letter ){
-        i = fdsc->cache->last_glyph_id;
-    }
-    else{
-        i = binsearch(fdsc->cmaps[0].unicode_list, fdsc->cmaps[0].list_length, unicode_letter);
-    }
+    int i = binsearch(fdsc->cmaps[0].unicode_list, fdsc->cmaps[0].list_length, unicode_letter);
     if( i != -1 ) {
         const lv_font_fmt_txt_glyph_dsc_t * gdsc = &fdsc->glyph_dsc[i];
-        fdsc->cache->last_glyph_id = i;
-        fdsc->cache->last_letter = unicode_letter;
         dsc_out->adv_w = gdsc->adv_w;
         dsc_out->box_h = gdsc->box_h;
         dsc_out->box_w = gdsc->box_w;
         dsc_out->ofs_x = gdsc->ofs_x;
         dsc_out->ofs_y = gdsc->ofs_y;
-        dsc_out->bpp   = fdsc->bpp;
+        dsc_out->format = (lv_font_glyph_format_t)fdsc->bpp;
+        dsc_out->stride = 0;
+        dsc_out->is_placeholder = 0;
+        dsc_out->gid.index = (uint32_t)i;
         return true;
     }
     return false;
@@ -1841,7 +1814,7 @@ static bool __user_font_get_glyph_dsc(const lv_font_t * font, lv_font_glyph_dsc_
 //使用排序和二分查表
 const lv_font_t japan_tanugo_reg_10 = {
     .dsc = &font_dsc,
-    .get_glyph_bitmap = __user_font_get_bitmap,
+    .get_glyph_bitmap = lv_font_get_bitmap_fmt_txt,
     .get_glyph_dsc = __user_font_get_glyph_dsc,
     .line_height = 17,
     .base_line = 0,
