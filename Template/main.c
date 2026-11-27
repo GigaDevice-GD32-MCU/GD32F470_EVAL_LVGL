@@ -82,6 +82,9 @@ int main(void)
 {
     systick_config();
 
+    /* USART0 (115200 8N1) for printf */
+    gd_eval_com_init(EVAL_COM0);
+
     /* SDRAM must be ready before LVGL/TLI use the frame buffers placed in it */
     exmc_synchronous_dynamic_ram_init();
 
@@ -90,12 +93,17 @@ int main(void)
     
 #if SYS_configUSE_LVGL
     lv_init();
+
+    #if LV_USE_DRAW_IPA
+        lv_draw_ipa_init();
+    #endif
+    
     lv_port_disp_init();
     lv_port_indev_init();
 #endif
 
 #if SYS_configUSE_FAT32FS
-    lv_fs_fatfs_init();
+    /* LVGL v9 registers the FatFs driver (LV_USE_FS_FATFS) in lv_init() */
     scanfiles_test();
 #endif
     
@@ -122,7 +130,7 @@ int main(void)
 #if !SYS_configUSE_FREERTOS
         delay_1ms(5);
 #if SYS_configUSE_LVGL
-        lv_task_handler();
+        lv_timer_handler();
 #endif
 
 #if SYS_configUSE_WATCHDOG

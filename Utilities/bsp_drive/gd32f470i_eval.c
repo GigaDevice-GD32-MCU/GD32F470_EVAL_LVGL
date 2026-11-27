@@ -33,6 +33,10 @@ OF SUCH DAMAGE.
 */
 
 #include "gd32f470i_eval.h"
+#include <stdio.h>
+#if defined(__GNUC__) && !defined(__ARMCC_VERSION) && !defined(__ICCARM__)
+#include <sys/stat.h>
+#endif
 
 /* private variables */
 static uint32_t GPIO_PORT[LEDn] = {LED1_GPIO_PORT, LED2_GPIO_PORT,
@@ -218,4 +222,83 @@ void gd_eval_com_init(uint32_t com)
     usart_transmit_config(com, USART_TRANSMIT_ENABLE);
     usart_enable(com);
 }
+
+/* retarget printf to EVAL_COM0, otherwise the C library uses semihosting (BKPT 0xAB) and halts.
+   EVAL_COM0 must be initialized with gd_eval_com_init() first. */
+static void com_putc(uint8_t ch)
+{
+    usart_data_transmit(EVAL_COM0, ch);
+    while(RESET == usart_flag_get(EVAL_COM0, USART_FLAG_TBE)) {
+    }
+}
+
+#if defined(__ICCARM__)
+size_t __write(int handle, const unsigned char *buf, size_t size)
+{
+    size_t i;
+
+    (void)handle;
+    if(NULL == buf) {
+        return 0;
+    }
+    for(i = 0; i < size; i++) {
+        com_putc(buf[i]);
+    }
+    return size;
+}
+#elif defined(__GNUC__) && !defined(__ARMCC_VERSION)
+int _write(int fd, char *buf, int len)
+{
+    int i;
+
+    (void)fd;
+    for(i = 0; i < len; i++) {
+        com_putc((uint8_t)buf[i]);
+    }
+    return len;
+}
+
+/* minimal syscalls required by newlib-nano stdio (newer GCC links warn "_xxx is not implemented") */
+int _close(int fd)
+{
+    (void)fd;
+    return -1;
+}
+
+int _fstat(int fd, struct stat *st)
+{
+    (void)fd;
+    st->st_mode = S_IFCHR;
+    return 0;
+}
+
+int _isatty(int fd)
+{
+    (void)fd;
+    return 1;
+}
+
+int _lseek(int fd, int ptr, int dir)
+{
+    (void)fd;
+    (void)ptr;
+    (void)dir;
+    return 0;
+}
+
+int _read(int fd, char *buf, int len)
+{
+    (void)fd;
+    (void)buf;
+    (void)len;
+    return 0;
+}
+#else
+int fputc(int ch, FILE *f)
+{
+    (void)f;
+    com_putc((uint8_t)ch);
+    return ch;
+}
+#endif
 
